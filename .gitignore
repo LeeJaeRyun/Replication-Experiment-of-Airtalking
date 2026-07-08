@@ -19,6 +19,13 @@ outputs/cityscapes_semantic_measurement/samples/
 outputs/airtalking_cityscapes_feature_paperhw/*.docx
 outputs/airtalking_cityscapes_feature_paperhw/report_*.json
 outputs/airtalking_cityscapes_feature_paperhw/report_render/
+outputs/**/*.docx
+outputs/**/report_render*/
+
+# Calibration scratch outputs
+outputs/airtalking_cityscapes_calibrated_probe*/
+outputs/airtalking_cityscapes_calibrated_final/
+outputs/**/timeseries_and_sinr_samples.npz
 
 # OS/editor noise
 .DS_Store

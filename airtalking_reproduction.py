@@ -65,11 +65,36 @@ class AssumedParams:
     density_interference_scale: float = 25.0
     linucb_alpha: float = 0.55
     linucb_lambda: float = 1.0
+    linucb_candidate_samples: int = 0
     sa_iterations: int = 36
     sa_temperature: float = 3.0
     sa_cooling: float = 0.90
     mcts_samples: int = 80
+    random_semantic_encode_probability: float = 2.0 / 3.0
+    random_semantic_decode_probability: float = 0.5
     seed: int = 260707
+
+
+def apply_assumed_overrides(assumed: AssumedParams, overrides: Sequence[str]) -> AssumedParams:
+    values = dict(assumed.__dict__)
+    defaults = assumed.__dict__
+    for item in overrides:
+        if "=" not in item:
+            raise ValueError(f"Expected --assumed KEY=VALUE, got {item!r}")
+        key, raw_value = item.split("=", 1)
+        key = key.strip()
+        if key not in values:
+            valid = ", ".join(sorted(values))
+            raise ValueError(f"Unknown assumed parameter {key!r}. Valid keys: {valid}")
+        default_value = defaults[key]
+        if isinstance(default_value, bool):
+            value = raw_value.lower() in {"1", "true", "yes", "on"}
+        elif isinstance(default_value, int) and not isinstance(default_value, bool):
+            value = int(raw_value)
+        else:
+            value = float(raw_value)
+        values[key] = value
+    return AssumedParams(**values)
 
 
 def apply_semantic_summary(
@@ -450,11 +475,13 @@ def policy_select(
     raise ValueError(f"Unknown policy {policy}")
 
 
-def random_state(rng: np.random.Generator, semantic_enabled: bool) -> Tuple[int, int]:
+def random_state(rng: np.random.Generator, semantic_enabled: bool, assumed: AssumedParams) -> Tuple[int, int]:
     if not semantic_enabled:
         return 0, 0
-    states = [(0, 0), (1, 0), (1, 1)]
-    return states[int(rng.integers(0, len(states)))]
+    if rng.random() >= assumed.random_semantic_encode_probability:
+        return 0, 0
+    decode = 1 if rng.random() < assumed.random_semantic_decode_probability else 0
+    return 1, decode
 
 
 def random_candidate(
@@ -473,7 +500,7 @@ def random_candidate(
     tx = available_uavs[int(rng.integers(0, len(available_uavs)))]
     rx_choices = [u for u in available_uavs if u != tx]
     rx = rx_choices[int(rng.integers(0, len(rx_choices)))]
-    sem_tx, sem_rx = random_state(rng, semantic_enabled)
+    sem_tx, sem_rx = random_state(rng, semantic_enabled, assumed)
     return make_candidate(tx, rx, sem_tx, sem_rx, source, dest, workload, uav_positions, device_positions, active, paper, assumed)
 
 
@@ -499,7 +526,7 @@ def sampled_candidates(
         tx = available_uavs[int(rng.integers(0, len(available_uavs)))]
         rx_choices = [u for u in available_uavs if u != tx]
         rx = rx_choices[int(rng.integers(0, len(rx_choices)))]
-        sem_tx, sem_rx = random_state(rng, semantic_enabled)
+        sem_tx, sem_rx = random_state(rng, semantic_enabled, assumed)
         key = (tx, rx, sem_tx, sem_rx)
         if key in seen:
             continue
@@ -559,18 +586,34 @@ def select_candidate_for_policy(
             rng,
         )
         return min(candidates, key=lambda c: c.cost - (0.35 if c.sem_tx else 0.0))
-    candidates = enumerate_candidates(
-        available_uavs,
-        source,
-        dest,
-        workload,
-        uav_positions,
-        device_positions,
-        active,
-        paper,
-        assumed,
-        semantic_enabled,
-    )
+    if policy == "LinUCB" and assumed.linucb_candidate_samples > 0:
+        candidates = sampled_candidates(
+            assumed.linucb_candidate_samples,
+            available_uavs,
+            source,
+            dest,
+            workload,
+            uav_positions,
+            device_positions,
+            active,
+            paper,
+            assumed,
+            semantic_enabled,
+            rng,
+        )
+    else:
+        candidates = enumerate_candidates(
+            available_uavs,
+            source,
+            dest,
+            workload,
+            uav_positions,
+            device_positions,
+            active,
+            paper,
+            assumed,
+            semantic_enabled,
+        )
     return policy_select(policy, candidates, rng, assumed, linucb, area)
 
 
@@ -1048,12 +1091,19 @@ def main() -> None:
     parser.add_argument("--semantic-profile-kind", choices=["zlib", "feature"], default="zlib")
     parser.add_argument("--semantic-encoder-mode", choices=["measured", "paper"], default="measured")
     parser.add_argument("--semantic-decoder-mode", choices=["measured", "paper"], default="measured")
+    parser.add_argument(
+        "--assumed",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="Override an AssumedParams field, e.g. --assumed workload_mean_bits=80000000.",
+    )
     args = parser.parse_args()
 
     import time
 
     paper = PaperParams()
-    assumed = AssumedParams()
+    assumed = apply_assumed_overrides(AssumedParams(), args.assumed)
     if args.repeats is not None or args.t_slots is not None:
         paper = PaperParams(**{**paper.__dict__, "repeats": args.repeats or paper.repeats, "t_slots": args.t_slots or paper.t_slots})
     semantic_summary = Path(args.semantic_summary) if args.semantic_summary else None
