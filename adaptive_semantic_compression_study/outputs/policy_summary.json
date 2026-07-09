@@ -1,0 +1,143 @@
+{
+  "dataset": "Cityscapes gtFine labelIds",
+  "splits": [
+    "train",
+    "val"
+  ],
+  "sample_count": "reused",
+  "compression_modes": [
+    {
+      "mode": "emergency",
+      "scale": 0.125,
+      "description": "very small payload for poor links",
+      "feature_bytes_mean": 32768.0,
+      "feature_bytes_median": 32768.0,
+      "zlib_bytes_mean": 1360.88,
+      "zlib_bytes_median": 1347.0,
+      "feature_ratio_mean": 0.005208333333333332,
+      "feature_ratio_median": 0.005208333333333333,
+      "zlib_ratio_mean": 0.00021630605061848958,
+      "zlib_ratio_median": 0.00021409988403320312,
+      "pixel_accuracy_mean": 0.9699882113933563,
+      "pixel_accuracy_median": 0.9703102111816406,
+      "mean_iou_mean": 0.8136171768453495,
+      "mean_iou_median": 0.816177344072543
+    },
+    {
+      "mode": "low",
+      "scale": 0.25,
+      "description": "small payload when latency is critical",
+      "feature_bytes_mean": 131072.0,
+      "feature_bytes_median": 131072.0,
+      "zlib_bytes_mean": 3194.1575,
+      "zlib_bytes_median": 3131.0,
+      "feature_ratio_mean": 0.02083333333333333,
+      "feature_ratio_median": 0.020833333333333332,
+      "zlib_ratio_mean": 0.0005076976617177328,
+      "zlib_ratio_median": 0.0004976590474446614,
+      "pixel_accuracy_mean": 0.9852671885490417,
+      "pixel_accuracy_median": 0.985431432723999,
+      "mean_iou_mean": 0.8915260114455288,
+      "mean_iou_median": 0.8952331561262772
+    },
+    {
+      "mode": "medium",
+      "scale": 0.375,
+      "description": "balanced compression",
+      "feature_bytes_mean": 294912.0,
+      "feature_bytes_median": 294912.0,
+      "zlib_bytes_mean": 5401.425,
+      "zlib_bytes_median": 5333.5,
+      "feature_ratio_mean": 0.046875,
+      "feature_ratio_median": 0.046875,
+      "zlib_ratio_mean": 0.0008585333824157714,
+      "zlib_ratio_median": 0.0008477369944254558,
+      "pixel_accuracy_mean": 0.9922664952278137,
+      "pixel_accuracy_median": 0.9923746585845947,
+      "mean_iou_mean": 0.9349805576029633,
+      "mean_iou_median": 0.9392832186764731
+    },
+    {
+      "mode": "paper_like",
+      "scale": 0.56,
+      "description": "close to AirTalking rho_c=0.104",
+      "feature_bytes_mean": 657231.0,
+      "feature_bytes_median": 657231.0,
+      "zlib_bytes_mean": 9293.45,
+      "zlib_bytes_median": 9150.0,
+      "feature_ratio_mean": 0.10446405410766602,
+      "feature_ratio_median": 0.10446405410766602,
+      "zlib_ratio_mean": 0.0014771540959676104,
+      "zlib_ratio_median": 0.0014543533325195312,
+      "pixel_accuracy_mean": 0.994264190196991,
+      "pixel_accuracy_median": 0.994290828704834,
+      "mean_iou_mean": 0.9505133587591602,
+      "mean_iou_median": 0.954777677911137
+    },
+    {
+      "mode": "high",
+      "scale": 0.75,
+      "description": "higher semantic quality when channel is good",
+      "feature_bytes_mean": 1179648.0,
+      "feature_bytes_median": 1179648.0,
+      "zlib_bytes_mean": 13747.9775,
+      "zlib_bytes_median": 13612.5,
+      "feature_ratio_mean": 0.1875,
+      "feature_ratio_median": 0.1875,
+      "zlib_ratio_mean": 0.0021851821740468346,
+      "zlib_ratio_median": 0.0021636486053466797,
+      "pixel_accuracy_mean": 0.9964096319675445,
+      "pixel_accuracy_median": 0.9964334964752197,
+      "mean_iou_mean": 0.9693919603126989,
+      "mean_iou_median": 0.9729020347294632
+    }
+  ],
+  "policy_summary": {
+    "sinr_count": 32099,
+    "sinr_db": {
+      "mean": -10.404527221140794,
+      "median": -11.685219791362808,
+      "p90": 3.1791564065560585
+    },
+    "raw_time_s": {
+      "mean": 30.574655775057135,
+      "median": 6.643996643982925,
+      "p90": 76.22335296770872
+    },
+    "fixed_low_time_s": {
+      "mean": 1.323666245930999,
+      "median": 0.8251108473669532,
+      "p90": 2.274680770777907
+    },
+    "fixed_paper_time_s": {
+      "mean": 4.424246229252744,
+      "median": 1.9243525589520964,
+      "p90": 9.192894202730361
+    },
+    "fixed_high_time_s": {
+      "mean": 7.5027751399945455,
+      "median": 3.0157765529181324,
+      "p90": 16.06190586361672
+    },
+    "adaptive_time_s": {
+      "mean": 1.1194173018101976,
+      "median": 0.9573366823761854,
+      "p90": 1.8107939035109513
+    },
+    "fixed_low_miou": 0.8915260114455288,
+    "fixed_paper_miou": 0.9505133587591602,
+    "fixed_high_miou": 0.9693919603126989,
+    "adaptive_miou_mean": 0.8891731272989855,
+    "adaptive_ratio_mean": 0.05223043941640135,
+    "adaptive_mode_counts": {
+      "high": 4452,
+      "paper_like": 3496,
+      "emergency": 11268,
+      "low": 7142,
+      "medium": 5741
+    },
+    "adaptive_vs_fixed_paper_time_reduction_pct": 74.69812384291126,
+    "fixed_paper_vs_raw_time_reduction_pct": 85.5296940649057,
+    "adaptive_vs_raw_time_reduction_pct": 96.33874111275058
+  }
+}
