@@ -51,4 +51,4 @@ A `match` means the reproduction is within 25% of the paper visual estimate; `pa
 
 ## Detailed CSV
 
-See `outputs\airtalking_cityscapes_calibrated_final_p012\verification_against_paper_calibrated_final_p012.csv` for row-level expected vs. reproduced values.
+See `studies\airtalking_reproduction\results\airtalking_cityscapes_calibrated_final_p012\verification_against_paper_calibrated_final_p012.csv` for row-level expected vs. reproduced values.

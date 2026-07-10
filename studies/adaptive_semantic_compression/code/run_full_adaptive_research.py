@@ -43,6 +43,14 @@ DEFAULT_METADATA = (
 )
 DEFAULT_QUALITY = STUDY_ROOT / "results" / "probe_outputs" / "compression_quality.csv"
 DEFAULT_OUT = STUDY_ROOT / "results" / "full_adaptive_results"
+DEFAULT_NEURAL_SUMMARY = (
+    WORKSPACE_ROOT
+    / "studies"
+    / "neural_encoder_decoder"
+    / "results"
+    / "paperlike_timed_latent20"
+    / "airtalking_semantic_summary.json"
+)
 
 
 def _font(size: int, bold: bool = False) -> ImageFont.ImageFont:
@@ -85,6 +93,37 @@ def load_quality_rows(path: Path) -> List[dict[str, float | str]]:
     if not rows:
         raise ValueError(f"No compression quality rows found in {path}")
     return sorted(rows, key=lambda item: float(item["feature_ratio_mean"]))
+
+
+def load_neural_anchor(path: Path) -> Optional[dict[str, object]]:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def apply_neural_anchor(
+    rows: Sequence[dict[str, float | str]],
+    neural_anchor: Optional[dict[str, object]],
+    quality_mode: str,
+) -> List[dict[str, float | str]]:
+    if neural_anchor is None:
+        return [dict(row) for row in rows]
+    rho_c = float(neural_anchor["rho_c_feature_uncompressed_mean"])
+    neural_quality = float(neural_anchor.get("semantic_quality_miou_best") or neural_anchor.get("semantic_quality_miou_final") or 0.0)
+    out: List[dict[str, float | str]] = []
+    for row in rows:
+        updated = dict(row)
+        if str(updated["mode"]) == "paper_like":
+            updated["feature_ratio_mean"] = rho_c
+            updated["feature_ratio_median"] = rho_c
+            updated["neural_encoder_decoder_miou"] = neural_quality
+            updated["neural_encoder_decoder_source"] = str(neural_anchor.get("source", "trained_cityscapes_rgb_to_semantic_encoder_decoder"))
+            updated["description"] = "paper-like payload anchored to trained neural encoder/decoder"
+            if quality_mode == "selection":
+                updated["mean_iou_mean"] = neural_quality
+                updated["mean_iou_median"] = neural_quality
+        out.append(updated)
+    return out
 
 
 def build_profiles(rows: Sequence[dict[str, float | str]]) -> Tuple[SemanticProfile, SemanticProfile]:
@@ -386,6 +425,8 @@ def format_row(summary: dict[str, float]) -> str:
 def write_analysis(
     results: Dict[str, Dict[int, Dict[str, SimulationResult]]],
     quality_rows: Sequence[dict[str, float | str]],
+    neural_anchor: Optional[dict[str, object]],
+    neural_quality_mode: str,
     out_dir: Path,
     elapsed: float,
     repeats: int,
@@ -405,6 +446,7 @@ def write_analysis(
         "- Base simulator: the calibrated AirTalking reproduction parameters from `studies/airtalking_reproduction/results/airtalking_cityscapes_calibrated_final_p012/run_metadata.json`.",
         f"- Repeats: {repeats}; simulation slots per repeat: {t_slots}.",
         "- Compared modes: nonsemantic raw payload, fixed Cityscapes paper-like semantic payload, and channel-aware adaptive semantic payload.",
+        "- Neural encoder/decoder reflection: the trained encoder/decoder anchors the paper-like payload ratio. Other adaptive levels remain Cityscapes label-proxy levels because only one neural compression level has been trained.",
         "",
         "## Compression table",
         "",
@@ -413,6 +455,20 @@ def write_analysis(
     ]
     for row in quality_rows:
         lines.append(f"| {row['mode']} | {float(row['feature_ratio_mean']):.6f} | {float(row['mean_iou_mean']):.3f} |")
+
+    if neural_anchor is not None:
+        lines.extend(
+            [
+                "",
+                "## Neural encoder/decoder anchor",
+                "",
+                f"- rho_c: {float(neural_anchor['rho_c_feature_uncompressed_mean']):.6f}",
+                f"- pixel accuracy: {float(neural_anchor['pixel_accuracy_best']):.4f}",
+                f"- mIoU: {float(neural_anchor['semantic_quality_miou_best']):.4f}",
+                f"- encode/decode median time: {float(neural_anchor['timing']['encode_ms_median']):.2f} ms / {float(neural_anchor['timing']['decode_ms_median']):.2f} ms",
+                f"- adaptive quality mode: {neural_quality_mode}. `record_only` means the neural mIoU is recorded, while mode selection still uses the label-proxy quality table.",
+            ]
+        )
 
     lines.extend(
         [
@@ -483,6 +539,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run full adaptive semantic compression follow-up experiments.")
     parser.add_argument("--metadata", default=str(DEFAULT_METADATA))
     parser.add_argument("--quality", default=str(DEFAULT_QUALITY))
+    parser.add_argument("--neural-summary", default=str(DEFAULT_NEURAL_SUMMARY))
+    parser.add_argument("--neural-quality-mode", choices=["record_only", "selection"], default="record_only")
     parser.add_argument("--out", default=str(DEFAULT_OUT))
     parser.add_argument("--repeats", type=int, default=None)
     parser.add_argument("--t-slots", type=int, default=None)
@@ -499,7 +557,9 @@ def main() -> None:
     repeats = args.repeats or paper.repeats
     t_slots = args.t_slots or paper.t_slots
     paper = PaperParams(**{**paper.__dict__, "repeats": repeats, "t_slots": t_slots})
-    quality_rows = load_quality_rows(quality_path)
+    neural_path = Path(args.neural_summary)
+    neural_anchor = load_neural_anchor(neural_path)
+    quality_rows = apply_neural_anchor(load_quality_rows(quality_path), neural_anchor, args.neural_quality_mode)
     fixed_profile, adaptive_profile = build_profiles(quality_rows)
 
     areas = tuple(int(value.strip()) for value in args.areas.split(",") if value.strip())
@@ -517,13 +577,16 @@ def main() -> None:
     usage_csv = write_mode_usage_csv(results, out_dir)
     npz_path = write_timeseries_npz(results, out_dir)
     figure_paths = save_figures(results, out_dir)
-    report_path = write_analysis(results, quality_rows, out_dir, elapsed, repeats, t_slots)
+    report_path = write_analysis(results, quality_rows, neural_anchor, args.neural_quality_mode, out_dir, elapsed, repeats, t_slots)
     metadata_out = out_dir / "run_metadata.json"
     metadata_out.write_text(
         json.dumps(
             {
                 "source_metadata": str(metadata_path),
                 "source_quality": str(quality_path),
+                "source_neural_encoder_decoder": str(neural_path) if neural_anchor is not None else None,
+                "neural_encoder_decoder_anchor": neural_anchor,
+                "neural_quality_mode": args.neural_quality_mode,
                 "base_paper_params": paper.__dict__,
                 "base_assumed_params": assumed.__dict__,
                 "source_reproduction_metadata": metadata,

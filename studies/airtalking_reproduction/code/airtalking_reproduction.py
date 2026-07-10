@@ -162,6 +162,12 @@ def apply_semantic_summary(
             "dec_bitrate": dec_bitrate,
         }
     )
+    semantic_quality = (
+        summary.get("semantic_quality_miou_best")
+        or summary.get("semantic_quality_miou_final")
+        or summary.get("val_mean_iou")
+        or summary.get("mean_iou_mean")
+    )
     return updated, {
         "source": str(summary_path),
         "applied": True,
@@ -173,9 +179,22 @@ def apply_semantic_summary(
         "rho_r": rho_r,
         "enc_bitrate": enc_bitrate,
         "dec_bitrate": dec_bitrate,
+        "semantic_quality": float(semantic_quality) if semantic_quality is not None else None,
         "num_samples": summary.get("num_samples"),
         "palette_classes": summary.get("palette_classes"),
     }
+
+
+def fixed_profile_from_semantic_metadata(metadata: Dict[str, object]) -> Optional[SemanticProfile]:
+    quality = metadata.get("semantic_quality")
+    rho_c = metadata.get("rho_c")
+    if quality is None or rho_c is None:
+        return None
+    return SemanticProfile(
+        name="fixed_neural_encoder_decoder",
+        strategy="fixed",
+        modes=(SemanticCompressionMode("neural_encoder_decoder", float(rho_c), float(quality)),),
+    )
 
 
 @dataclass
@@ -1014,6 +1033,7 @@ def run_experiments(
     assumed: AssumedParams,
     repeats: Optional[int] = None,
     t_slots: Optional[int] = None,
+    semantic_profile: Optional[SemanticProfile] = None,
 ) -> Dict[str, Dict[int, Dict[str, SimulationResult]]]:
     if repeats is not None or t_slots is not None:
         paper = PaperParams(**{**paper.__dict__, "repeats": repeats or paper.repeats, "t_slots": t_slots or paper.t_slots})
@@ -1021,7 +1041,10 @@ def run_experiments(
     for area in AREAS:
         all_results["semantic"][area] = {}
         for policy in POLICIES:
-            reps = [run_single(area, policy, repeat, True, paper, assumed) for repeat in range(paper.repeats)]
+            reps = [
+                run_single(area, policy, repeat, True, paper, assumed, semantic_profile=semantic_profile)
+                for repeat in range(paper.repeats)
+            ]
             all_results["semantic"][area][policy] = aggregate(reps)
     baseline_area = 300
     all_results["nonsemantic"][baseline_area] = {}
@@ -1300,7 +1323,11 @@ def main() -> None:
     parser.add_argument("--out", default="studies/airtalking_reproduction/results/airtalking_reproduction", help="Output directory.")
     parser.add_argument("--repeats", type=int, default=None, help="Override repeat count for quick tests.")
     parser.add_argument("--t-slots", type=int, default=None, help="Override T for quick tests.")
-    parser.add_argument("--semantic-summary", default=None, help="JSON summary from measure_camvid_semantics.py.")
+    parser.add_argument(
+        "--semantic-summary",
+        default=None,
+        help="JSON summary from Cityscapes semantic measurement or the trained neural encoder/decoder.",
+    )
     parser.add_argument("--semantic-raw-basis", choices=["uncompressed", "png"], default="uncompressed")
     parser.add_argument("--semantic-profile-kind", choices=["zlib", "feature"], default="zlib")
     parser.add_argument("--semantic-encoder-mode", choices=["measured", "paper"], default="measured")
@@ -1329,15 +1356,24 @@ def main() -> None:
         args.semantic_decoder_mode,
         args.semantic_profile_kind,
     )
+    fixed_semantic_profile = fixed_profile_from_semantic_metadata(semantic_profile)
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     started = time.perf_counter()
-    results = run_experiments(paper, assumed)
+    results = run_experiments(paper, assumed, semantic_profile=fixed_semantic_profile)
     elapsed = time.perf_counter() - started
     csv_path = write_summary_csv(results, out_dir)
     npz_path = write_timeseries_npz(results, out_dir)
-    metadata_path = write_run_metadata(out_dir, paper, assumed, elapsed, semantic_profile)
+    metadata_payload = {
+        **semantic_profile,
+        "simulation_profile": {
+            "applied": fixed_semantic_profile is not None,
+            "name": fixed_semantic_profile.name if fixed_semantic_profile else None,
+            "modes": [mode.__dict__ for mode in fixed_semantic_profile.modes] if fixed_semantic_profile else [],
+        },
+    }
+    metadata_path = write_run_metadata(out_dir, paper, assumed, elapsed, metadata_payload)
     plot_paths = make_plots(results, out_dir / "figures", paper)
     print(json.dumps(
         {
