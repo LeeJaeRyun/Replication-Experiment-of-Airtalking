@@ -16,10 +16,10 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_IMAGE_ROOT = ROOT / "dataset" / "leftImg8bit_trainvaltest" / "leftImg8bit"
 DEFAULT_LABEL_ROOT = ROOT / "dataset" / "gtFine_trainvaltest" / "gtFine"
-DEFAULT_OUT = ROOT / "adaptive_semantic_compression_study" / "encoder_decoder_results" / "smoke"
+DEFAULT_OUT = ROOT / "studies" / "neural_encoder_decoder" / "results" / "smoke"
 IGNORE_INDEX = 255
 NUM_CLASSES = 19
 

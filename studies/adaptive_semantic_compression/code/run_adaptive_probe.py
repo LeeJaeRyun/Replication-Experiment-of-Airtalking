@@ -12,10 +12,18 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 
-ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_GT_ROOT = ROOT / "dataset" / "gtFine_trainvaltest" / "gtFine"
-DEFAULT_SINR = ROOT / "outputs" / "airtalking_cityscapes_calibrated_final_p012" / "timeseries_and_sinr_samples.npz"
-OUT_DIR = Path(__file__).resolve().parent / "outputs"
+WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
+STUDY_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_GT_ROOT = WORKSPACE_ROOT / "dataset" / "gtFine_trainvaltest" / "gtFine"
+DEFAULT_SINR = (
+    WORKSPACE_ROOT
+    / "studies"
+    / "airtalking_reproduction"
+    / "results"
+    / "airtalking_cityscapes_calibrated_final_p012"
+    / "timeseries_and_sinr_samples.npz"
+)
+OUT_DIR = STUDY_ROOT / "results" / "probe_outputs"
 FIG_DIR = OUT_DIR / "figures"
 
 RAW_RGB_BYTES = 2048 * 1024 * 3

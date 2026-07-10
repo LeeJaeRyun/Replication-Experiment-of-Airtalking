@@ -14,16 +14,18 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
 
-ROOT = Path(__file__).resolve().parent
-RUN_DIR = ROOT / "outputs" / "airtalking_cityscapes_feature_paperhw"
-CITY_DIR = ROOT / "outputs" / "cityscapes_semantic_measurement"
+STUDY_ROOT = Path(__file__).resolve().parents[1]
+RESULTS_DIR = STUDY_ROOT / "results"
+REPORTS_DIR = STUDY_ROOT / "reports"
+RUN_DIR = RESULTS_DIR / "airtalking_cityscapes_feature_paperhw"
+CITY_DIR = RESULTS_DIR / "cityscapes_semantic_measurement"
 FIG_DIR = RUN_DIR / "figures"
 
 SUMMARY_CSV = RUN_DIR / "summary_metrics.csv"
 METADATA_JSON = RUN_DIR / "run_metadata.json"
 VERIFICATION_CSV = RUN_DIR / "verification_against_paper_cityscapes_feature_paperhw.csv"
 CITY_SUMMARY_JSON = CITY_DIR / "cityscapes_semantic_summary.json"
-REPORT_PATH = RUN_DIR / "AirTalking_Cityscapes_Reproduction_Report_KR.docx"
+REPORT_PATH = REPORTS_DIR / "AirTalking_Cityscapes_Reproduction_Report_KR.docx"
 
 LATIN_FONT = "Calibri"
 KOREAN_FONT = "Malgun Gothic"
@@ -338,7 +340,7 @@ def add_masthead(doc: Document) -> None:
         ("대상 논문", "Airtalking: Aerial D2D for Multi-UAV Systems Based on Semantic Communication"),
         ("작성일", "2026-07-07"),
         ("데이터", "Cityscapes train/val 3,475장"),
-        ("결과 폴더", r"outputs\airtalking_cityscapes_feature_paperhw"),
+        ("결과 폴더", r"studies\airtalking_reproduction\results\airtalking_cityscapes_feature_paperhw"),
         ("재현 수준", "공개 파라미터 기반 재구현 + 미공개 파라미터 명시적 가정"),
     ]
     for label, value in metadata:
@@ -463,14 +465,14 @@ def write_file_map(doc: Document) -> None:
         [
             [r"dataset\leftImg8bit_trainvaltest", "Cityscapes RGB 이미지. semantic profile 측정의 raw input"],
             [r"dataset\gtFine_trainvaltest", "Cityscapes fine semantic label. train/val labelIds를 사용"],
-            ["measure_cityscapes_semantics.py", "Cityscapes 이미지/라벨을 읽어서 rho_c, payload 크기, encode/decode proxy 시간을 측정"],
-            ["airtalking_reproduction.py", "AirTalking 시스템 모델을 Python/NumPy로 구현한 메인 시뮬레이터"],
-            ["verify_against_paper.py", "논문 Figure 3/4/6의 시각 추정값과 재현 결과를 자동 비교"],
+            [r"studies\airtalking_reproduction\code\measure_cityscapes_semantics.py", "Cityscapes 이미지/라벨을 읽어서 rho_c, payload 크기, encode/decode proxy 시간을 측정"],
+            [r"studies\airtalking_reproduction\code\airtalking_reproduction.py", "AirTalking 시스템 모델을 Python/NumPy로 구현한 메인 시뮬레이터"],
+            [r"studies\airtalking_reproduction\code\verify_against_paper.py", "논문 Figure 3/4/6의 시각 추정값과 재현 결과를 자동 비교"],
             [r"outputs\cityscapes_semantic_measurement\cityscapes_semantic_summary.json", "Cityscapes semantic profile 요약. 시뮬레이터 입력으로 사용"],
-            [r"outputs\airtalking_cityscapes_feature_paperhw\run_metadata.json", "논문 공개값과 가정값을 분리해 기록한 metadata"],
-            [r"outputs\airtalking_cityscapes_feature_paperhw\summary_metrics.csv", "정책/면적별 finished requests, energy, latency, travel distance 결과"],
-            [r"outputs\airtalking_cityscapes_feature_paperhw\figures", "보고서와 검증용 그림 파일"],
-            [r"outputs\airtalking_cityscapes_feature_paperhw\verification_*.csv/md", "논문 그래프 대비 match/partial/mismatch 판정"],
+            [r"studies\airtalking_reproduction\results\airtalking_cityscapes_feature_paperhw\run_metadata.json", "논문 공개값과 가정값을 분리해 기록한 metadata"],
+            [r"studies\airtalking_reproduction\results\airtalking_cityscapes_feature_paperhw\summary_metrics.csv", "정책/면적별 finished requests, energy, latency, travel distance 결과"],
+            [r"studies\airtalking_reproduction\results\airtalking_cityscapes_feature_paperhw\figures", "보고서와 검증용 그림 파일"],
+            [r"studies\airtalking_reproduction\results\airtalking_cityscapes_feature_paperhw\verification_*.csv/md", "논문 그래프 대비 match/partial/mismatch 판정"],
         ],
         [3600, 5760],
         font_size=8.3,
@@ -700,9 +702,9 @@ def write_interpretation_section(doc: Document) -> None:
 def write_appendix(doc: Document) -> None:
     doc.add_heading("10. 재실행 명령과 산출물 확인", level=1)
     commands = [
-        r"python measure_cityscapes_semantics.py --root dataset --out outputs\cityscapes_semantic_measurement --splits train,val --feature-scale 0.56 --repeats 1",
-        r"python airtalking_reproduction.py --out outputs\airtalking_cityscapes_feature_paperhw --semantic-summary outputs\cityscapes_semantic_measurement\cityscapes_semantic_summary.json --semantic-profile-kind feature --semantic-encoder-mode paper --semantic-decoder-mode paper",
-        r"python verify_against_paper.py --summary outputs\airtalking_cityscapes_feature_paperhw\summary_metrics.csv --label _cityscapes_feature_paperhw",
+        r"python studies\airtalking_reproduction\code\measure_cityscapes_semantics.py --root dataset --out studies\airtalking_reproduction\results\cityscapes_semantic_measurement --splits train,val --feature-scale 0.56 --repeats 1",
+        r"python studies\airtalking_reproduction\code\airtalking_reproduction.py --out studies\airtalking_reproduction\results\airtalking_cityscapes_feature_paperhw --semantic-summary studies\airtalking_reproduction\results\cityscapes_semantic_measurement\cityscapes_semantic_summary.json --semantic-profile-kind feature --semantic-encoder-mode paper --semantic-decoder-mode paper",
+        r"python studies\airtalking_reproduction\code\verify_against_paper.py --summary studies\airtalking_reproduction\results\airtalking_cityscapes_feature_paperhw\summary_metrics.csv --label _cityscapes_feature_paperhw",
         r"python build_airtalking_report.py",
     ]
     for cmd in commands:

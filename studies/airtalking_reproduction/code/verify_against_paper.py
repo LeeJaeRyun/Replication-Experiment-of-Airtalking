@@ -228,7 +228,7 @@ def write_outputs(rows: list[dict[str, str]], qualitative: list[tuple[str, str, 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--summary", default="outputs/airtalking_reproduction/summary_metrics.csv")
+    parser.add_argument("--summary", default="studies/airtalking_reproduction/results/airtalking_reproduction/summary_metrics.csv")
     parser.add_argument("--out-dir", default=None)
     parser.add_argument("--label", default="")
     args = parser.parse_args()

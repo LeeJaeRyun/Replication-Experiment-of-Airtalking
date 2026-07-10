@@ -14,12 +14,12 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
 
-ROOT = Path(__file__).resolve().parent
-OUT_DIR = ROOT / "outputs"
+STUDY_ROOT = Path(__file__).resolve().parents[1]
+OUT_DIR = STUDY_ROOT / "results" / "probe_outputs"
 FIG_DIR = OUT_DIR / "figures"
 QUALITY_CSV = OUT_DIR / "compression_quality.csv"
 POLICY_JSON = OUT_DIR / "policy_summary.json"
-REPORT_PATH = ROOT / "Adaptive_Semantic_Compression_Research_Proposal_KR.docx"
+REPORT_PATH = STUDY_ROOT / "reports" / "Adaptive_Semantic_Compression_Research_Proposal_KR.docx"
 
 LATIN_FONT = "Calibri"
 KOREAN_FONT = "Malgun Gothic"

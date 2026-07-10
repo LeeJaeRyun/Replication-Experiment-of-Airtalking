@@ -166,7 +166,7 @@ def write_sample_visuals(rows: list[dict[str, float | int | str]], out_dir: Path
 def main() -> None:
     parser = argparse.ArgumentParser(description="Measure Cityscapes semantic payload profile for AirTalking reproduction.")
     parser.add_argument("--root", default="dataset")
-    parser.add_argument("--out", default="outputs/cityscapes_semantic_measurement")
+    parser.add_argument("--out", default="studies/airtalking_reproduction/results/cityscapes_semantic_measurement")
     parser.add_argument("--splits", default="train,val")
     parser.add_argument("--feature-scale", type=float, default=0.56)
     parser.add_argument("--repeats", type=int, default=1)

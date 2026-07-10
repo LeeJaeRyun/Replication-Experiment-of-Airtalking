@@ -16,10 +16,12 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
 
-ROOT = Path(__file__).resolve().parent
-CITY_DIR = ROOT / "outputs" / "cityscapes_semantic_measurement"
-ORIGINAL_DIR = ROOT / "outputs" / "airtalking_cityscapes_feature_paperhw"
-RUN_DIR = ROOT / "outputs" / "airtalking_cityscapes_calibrated_final_p012"
+STUDY_ROOT = Path(__file__).resolve().parents[1]
+RESULTS_DIR = STUDY_ROOT / "results"
+REPORTS_DIR = STUDY_ROOT / "reports"
+CITY_DIR = RESULTS_DIR / "cityscapes_semantic_measurement"
+ORIGINAL_DIR = RESULTS_DIR / "airtalking_cityscapes_feature_paperhw"
+RUN_DIR = RESULTS_DIR / "airtalking_cityscapes_calibrated_final_p012"
 FIG_DIR = RUN_DIR / "figures"
 
 CITY_SUMMARY_JSON = CITY_DIR / "cityscapes_semantic_summary.json"
@@ -27,7 +29,7 @@ SUMMARY_CSV = RUN_DIR / "summary_metrics.csv"
 METADATA_JSON = RUN_DIR / "run_metadata.json"
 VERIFY_CSV = RUN_DIR / "verification_against_paper_calibrated_final_p012.csv"
 ORIGINAL_VERIFY_CSV = ORIGINAL_DIR / "verification_against_paper_cityscapes_feature_paperhw.csv"
-REPORT_PATH = RUN_DIR / "AirTalking_easy_reproduction_report_KR.docx"
+REPORT_PATH = REPORTS_DIR / "AirTalking_easy_reproduction_report_KR.docx"
 
 LATIN_FONT = "Calibri"
 KOREAN_FONT = "Malgun Gothic"

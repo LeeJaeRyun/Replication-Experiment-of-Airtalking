@@ -15,14 +15,14 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 
 
-ROOT = Path(__file__).resolve().parent
-ADAPT_DIR = ROOT / "adaptive_semantic_compression_study"
-ADAPT_OUT = ADAPT_DIR / "outputs"
-REPRO_DIR = ROOT / "outputs" / "airtalking_cityscapes_calibrated_final_p012"
-CITY_DIR = ROOT / "outputs" / "cityscapes_semantic_measurement"
+WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
+ADAPT_DIR = WORKSPACE_ROOT / "studies" / "adaptive_semantic_compression"
+ADAPT_OUT = ADAPT_DIR / "results" / "probe_outputs"
+REPRO_DIR = WORKSPACE_ROOT / "studies" / "airtalking_reproduction" / "results" / "airtalking_cityscapes_calibrated_final_p012"
+CITY_DIR = WORKSPACE_ROOT / "studies" / "airtalking_reproduction" / "results" / "cityscapes_semantic_measurement"
 
-PROPOSAL_PATH = ADAPT_DIR / "Adaptive_Semantic_Compression_Proposal_EASY_KR.docx"
-IMPLEMENTATION_PATH = REPRO_DIR / "AirTalking_Experiment_Implementation_EASY_KR.docx"
+PROPOSAL_PATH = ADAPT_DIR / "reports" / "Adaptive_Semantic_Compression_Proposal_EASY_KR.docx"
+IMPLEMENTATION_PATH = WORKSPACE_ROOT / "studies" / "airtalking_reproduction" / "reports" / "AirTalking_Experiment_Implementation_EASY_KR.docx"
 
 LATIN_FONT = "Calibri"
 KOREAN_FONT = "Malgun Gothic"
@@ -556,11 +556,11 @@ def build_easy_implementation() -> Path:
         doc,
         ["파일/폴더", "역할"],
         [
-            ["outputs/cityscapes_semantic_measurement", "Cityscapes로 의미 정보 크기를 측정한 결과"],
-            ["outputs/airtalking_cityscapes_calibrated_final_p012", "최종 보정 실험 결과"],
-            ["airtalking_reproduction.py", "드론 통신 가상 실험 코드"],
-            ["measure_cityscapes_semantics.py", "원본 사진과 의미 정보 크기 측정 코드"],
-            ["verify_against_paper.py", "논문 그래프와 결과 비교 코드"],
+            ["studies/airtalking_reproduction/results/cityscapes_semantic_measurement", "Cityscapes로 의미 정보 크기를 측정한 결과"],
+            ["studies/airtalking_reproduction/results/airtalking_cityscapes_calibrated_final_p012", "최종 보정 실험 결과"],
+            ["studies/airtalking_reproduction/code/airtalking_reproduction.py", "드론 통신 가상 실험 코드"],
+            ["studies/airtalking_reproduction/code/measure_cityscapes_semantics.py", "원본 사진과 의미 정보 크기 측정 코드"],
+            ["studies/airtalking_reproduction/code/verify_against_paper.py", "논문 그래프와 결과 비교 코드"],
         ],
         [3600, 5760],
         font_size=8.3,

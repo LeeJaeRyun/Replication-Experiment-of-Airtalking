@@ -13,9 +13,11 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
+STUDY_ROOT = Path(__file__).resolve().parents[1]
+AIR_TALKING_CODE = WORKSPACE_ROOT / "studies" / "airtalking_reproduction" / "code"
+if str(AIR_TALKING_CODE) not in sys.path:
+    sys.path.insert(0, str(AIR_TALKING_CODE))
 
 from airtalking_reproduction import (  # noqa: E402
     AREAS,
@@ -31,9 +33,16 @@ from airtalking_reproduction import (  # noqa: E402
 )
 
 
-DEFAULT_METADATA = ROOT / "outputs" / "airtalking_cityscapes_calibrated_final_p012" / "run_metadata.json"
-DEFAULT_QUALITY = ROOT / "adaptive_semantic_compression_study" / "outputs" / "compression_quality.csv"
-DEFAULT_OUT = ROOT / "adaptive_semantic_compression_study" / "full_adaptive_results"
+DEFAULT_METADATA = (
+    WORKSPACE_ROOT
+    / "studies"
+    / "airtalking_reproduction"
+    / "results"
+    / "airtalking_cityscapes_calibrated_final_p012"
+    / "run_metadata.json"
+)
+DEFAULT_QUALITY = STUDY_ROOT / "results" / "probe_outputs" / "compression_quality.csv"
+DEFAULT_OUT = STUDY_ROOT / "results" / "full_adaptive_results"
 
 
 def _font(size: int, bold: bool = False) -> ImageFont.ImageFont:
@@ -393,7 +402,7 @@ def write_analysis(
         "## Data and settings",
         "",
         "- Public semantic data: Cityscapes gtFine train/val label maps.",
-        "- Base simulator: the calibrated AirTalking reproduction parameters from `outputs/airtalking_cityscapes_calibrated_final_p012/run_metadata.json`.",
+        "- Base simulator: the calibrated AirTalking reproduction parameters from `studies/airtalking_reproduction/results/airtalking_cityscapes_calibrated_final_p012/run_metadata.json`.",
         f"- Repeats: {repeats}; simulation slots per repeat: {t_slots}.",
         "- Compared modes: nonsemantic raw payload, fixed Cityscapes paper-like semantic payload, and channel-aware adaptive semantic payload.",
         "",

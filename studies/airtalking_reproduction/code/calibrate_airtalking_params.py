@@ -94,8 +94,11 @@ def run_candidate(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Quick hidden-parameter calibration for the AirTalking reproduction.")
-    parser.add_argument("--semantic-summary", default="outputs/cityscapes_semantic_measurement/cityscapes_semantic_summary.json")
-    parser.add_argument("--out", default="outputs/calibration/candidates.csv")
+    parser.add_argument(
+        "--semantic-summary",
+        default="studies/airtalking_reproduction/results/cityscapes_semantic_measurement/cityscapes_semantic_summary.json",
+    )
+    parser.add_argument("--out", default="studies/airtalking_reproduction/results/calibration/candidates.csv")
     parser.add_argument("--repeats", type=int, default=2)
     parser.add_argument("--t-slots", type=int, default=350)
     args = parser.parse_args()

@@ -7,8 +7,9 @@ import math
 from pathlib import Path
 
 
-DEFAULT_SUMMARY = Path(__file__).resolve().parent / "full_adaptive_results" / "summary_metrics.csv"
-DEFAULT_OUT = Path(__file__).resolve().parent / "full_adaptive_results" / "result_validation.json"
+STUDY_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_SUMMARY = STUDY_ROOT / "results" / "full_adaptive_results" / "summary_metrics.csv"
+DEFAULT_OUT = STUDY_ROOT / "results" / "full_adaptive_results" / "result_validation.json"
 MODES = ("nonsemantic", "fixed_paper_like", "adaptive_semantic")
 AREAS = (100, 200, 300, 400, 500)
 POLICIES = ("Stochastic", "LinUCB", "SA", "Greedy", "MCTS")

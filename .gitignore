@@ -1,44 +1,31 @@
-# Original datasets and downloaded papers
+# Original datasets and reference papers
 dataset/
 datasets/
-base/
+studies/**/reference/*.pdf
 
-# Local/agent metadata
+# Local/agent metadata and Python caches
 .agents/
 .codex/
 __pycache__/
+**/__pycache__/
 *.py[cod]
 
-# Paper extraction artifacts and raw derived dataset rows
-outputs/airtalking_paper_pages/
-outputs/airtalking_extracted_text.txt
-outputs/cityscapes_semantic_measurement/cityscapes_semantic_measurements.csv
-outputs/cityscapes_semantic_measurement/samples/
+# Large or local-only generated artifacts
+studies/**/results/**/timeseries_and_sinr_samples.npz
+studies/**/results/**/*semantic_encoder_decoder.pt
+studies/**/results/**/samples/
+studies/**/results/**/cityscapes_semantic_measurements.csv
+studies/**/results/**/report_*.json
+studies/**/results/**/report_render*/
+studies/**/results/**/rendered*/
+studies/**/results/**/_smoke*/
+studies/**/results/**/smoke/
+studies/**/results/**/calibration/
 
-# Local report artifacts; do not publish report files
-outputs/airtalking_cityscapes_feature_paperhw/*.docx
-outputs/airtalking_cityscapes_feature_paperhw/report_*.json
-outputs/airtalking_cityscapes_feature_paperhw/report_render/
-outputs/**/*.docx
-outputs/**/report_render*/
-
-# Calibration scratch outputs
-outputs/airtalking_cityscapes_calibrated_probe*/
-outputs/airtalking_cityscapes_calibrated_final/
-outputs/**/timeseries_and_sinr_samples.npz
-outputs/_smoke*/
-adaptive_semantic_compression_study/_smoke*/
-adaptive_semantic_compression_study/full_adaptive_results/*report*.md
-adaptive_semantic_compression_study/full_adaptive_results/timeseries_and_sinr_samples.npz
-adaptive_semantic_compression_study/encoder_decoder_results/**/*.pt
-adaptive_semantic_compression_study/encoder_decoder_results/smoke/
-adaptive_semantic_compression_study/encoder_decoder_results/mini/
-adaptive_semantic_compression_study/encoder_decoder_results/paperlike_smoke/
-adaptive_semantic_compression_study/encoder_decoder_results/cpu_baseline_latent8/
-adaptive_semantic_compression_study/encoder_decoder_results/paperlike_tiny_latent20/
-outputs/airtalking_neural_encoder_decoder_paperlike/
-outputs/airtalking_neural_encoder_decoder_paperlike/timeseries_and_sinr_samples.npz
-outputs/airtalking_neural_encoder_decoder_*/verification_against_paper*.md
+# Obsolete pre-cleanup locations
+outputs/
+adaptive_semantic_compression_study/
+base/
 
 # OS/editor noise
 .DS_Store

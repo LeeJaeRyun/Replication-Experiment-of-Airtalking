@@ -1297,7 +1297,7 @@ def write_run_metadata(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Reproduce AirTalking UAV semantic D2D simulations from paper equations.")
-    parser.add_argument("--out", default="outputs/airtalking_reproduction", help="Output directory.")
+    parser.add_argument("--out", default="studies/airtalking_reproduction/results/airtalking_reproduction", help="Output directory.")
     parser.add_argument("--repeats", type=int, default=None, help="Override repeat count for quick tests.")
     parser.add_argument("--t-slots", type=int, default=None, help="Override T for quick tests.")
     parser.add_argument("--semantic-summary", default=None, help="JSON summary from measure_camvid_semantics.py.")
