@@ -26,6 +26,10 @@ outputs/**/report_render*/
 outputs/airtalking_cityscapes_calibrated_probe*/
 outputs/airtalking_cityscapes_calibrated_final/
 outputs/**/timeseries_and_sinr_samples.npz
+outputs/_smoke*/
+adaptive_semantic_compression_study/_smoke*/
+adaptive_semantic_compression_study/full_adaptive_results/*report*.md
+adaptive_semantic_compression_study/full_adaptive_results/timeseries_and_sinr_samples.npz
 
 # OS/editor noise
 .DS_Store

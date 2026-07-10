@@ -1,0 +1,215 @@
+{
+  "passed": true,
+  "row_count": 75,
+  "expected_row_count": 75,
+  "missing_combinations": [],
+  "extra_combinations": [],
+  "nonfinite_values": [],
+  "adaptive_vs_fixed": {
+    "all_finished_ge_fixed": true,
+    "all_avg_time_le_fixed": true,
+    "max_quality_drop": -0.08926381908714909,
+    "comparisons": [
+      {
+        "area": 100,
+        "policy": "Stochastic",
+        "finished_delta_pct": 29.681978798586577,
+        "avg_time_delta_pct": -17.04662795594588,
+        "quality_delta": -0.03286733961091992,
+        "pass": true
+      },
+      {
+        "area": 100,
+        "policy": "LinUCB",
+        "finished_delta_pct": 139.58641063515506,
+        "avg_time_delta_pct": -74.26130635013722,
+        "quality_delta": -0.08926381908714909,
+        "pass": true
+      },
+      {
+        "area": 100,
+        "policy": "SA",
+        "finished_delta_pct": 49.257425742574256,
+        "avg_time_delta_pct": -37.319974908372956,
+        "quality_delta": -0.07536556354001989,
+        "pass": true
+      },
+      {
+        "area": 100,
+        "policy": "Greedy",
+        "finished_delta_pct": 66.53605015673982,
+        "avg_time_delta_pct": -84.19012861484259,
+        "quality_delta": -0.03526461464480701,
+        "pass": true
+      },
+      {
+        "area": 100,
+        "policy": "MCTS",
+        "finished_delta_pct": 77.65862377122431,
+        "avg_time_delta_pct": -82.35243660722784,
+        "quality_delta": -0.05387015478146828,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "Stochastic",
+        "finished_delta_pct": 18.627450980392158,
+        "avg_time_delta_pct": -4.487585267353663,
+        "quality_delta": -0.027249813183522598,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "LinUCB",
+        "finished_delta_pct": 25.445705024311188,
+        "avg_time_delta_pct": -46.280754693161704,
+        "quality_delta": -0.06414980766171874,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "SA",
+        "finished_delta_pct": 14.993646759847518,
+        "avg_time_delta_pct": -24.145998373320147,
+        "quality_delta": -0.057324448628922275,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "Greedy",
+        "finished_delta_pct": 21.896955503512867,
+        "avg_time_delta_pct": -59.12044612659428,
+        "quality_delta": -0.018303217680582407,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "MCTS",
+        "finished_delta_pct": 22.03821656050955,
+        "avg_time_delta_pct": -49.81463233895531,
+        "quality_delta": -0.04274525425150222,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "Stochastic",
+        "finished_delta_pct": 4.799999999999993,
+        "avg_time_delta_pct": -6.345818455475596,
+        "quality_delta": -0.022067659263049322,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "LinUCB",
+        "finished_delta_pct": 21.96078431372549,
+        "avg_time_delta_pct": -32.4033428773312,
+        "quality_delta": -0.04451077238912726,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "SA",
+        "finished_delta_pct": 14.539400665926758,
+        "avg_time_delta_pct": -19.04425580820331,
+        "quality_delta": -0.04463035404576099,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "Greedy",
+        "finished_delta_pct": 12.96691568836712,
+        "avg_time_delta_pct": -43.98574621383056,
+        "quality_delta": -0.021112349439331712,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "MCTS",
+        "finished_delta_pct": 15.835962145110408,
+        "avg_time_delta_pct": -38.00226025196097,
+        "quality_delta": -0.035717209984900355,
+        "pass": true
+      },
+      {
+        "area": 400,
+        "policy": "Stochastic",
+        "finished_delta_pct": 5.474452554744525,
+        "avg_time_delta_pct": -9.47265852906742,
+        "quality_delta": -0.016107205282219872,
+        "pass": true
+      },
+      {
+        "area": 400,
+        "policy": "LinUCB",
+        "finished_delta_pct": 17.482517482517483,
+        "avg_time_delta_pct": -31.199554297454522,
+        "quality_delta": -0.04584657388938995,
+        "pass": true
+      },
+      {
+        "area": 400,
+        "policy": "SA",
+        "finished_delta_pct": 5.560538116591931,
+        "avg_time_delta_pct": -8.785995099171211,
+        "quality_delta": -0.03681981180228777,
+        "pass": true
+      },
+      {
+        "area": 400,
+        "policy": "Greedy",
+        "finished_delta_pct": 4.412519240636221,
+        "avg_time_delta_pct": -31.504418292179615,
+        "quality_delta": -0.01529749035337924,
+        "pass": true
+      },
+      {
+        "area": 400,
+        "policy": "MCTS",
+        "finished_delta_pct": 9.633312616532006,
+        "avg_time_delta_pct": -30.368340068255765,
+        "quality_delta": -0.029649230826150785,
+        "pass": true
+      },
+      {
+        "area": 500,
+        "policy": "Stochastic",
+        "finished_delta_pct": 5.804111245465535,
+        "avg_time_delta_pct": -6.201607662953256,
+        "quality_delta": -0.012897739047054158,
+        "pass": true
+      },
+      {
+        "area": 500,
+        "policy": "LinUCB",
+        "finished_delta_pct": 15.659777424483309,
+        "avg_time_delta_pct": -18.990403270738142,
+        "quality_delta": -0.042893937802250814,
+        "pass": true
+      },
+      {
+        "area": 500,
+        "policy": "SA",
+        "finished_delta_pct": 4.794520547945197,
+        "avg_time_delta_pct": -5.106947279945219,
+        "quality_delta": -0.03785208390039685,
+        "pass": true
+      },
+      {
+        "area": 500,
+        "policy": "Greedy",
+        "finished_delta_pct": 7.798408488063655,
+        "avg_time_delta_pct": -35.6506323304539,
+        "quality_delta": -0.013378480930678172,
+        "pass": true
+      },
+      {
+        "area": 500,
+        "policy": "MCTS",
+        "finished_delta_pct": 16.588628762541813,
+        "avg_time_delta_pct": -32.260673249226926,
+        "quality_delta": -0.02904810563879956,
+        "pass": true
+      }
+    ]
+  }
+}

@@ -20,6 +20,27 @@ AREAS = (100, 200, 300, 400, 500)
 
 
 @dataclass(frozen=True)
+class SemanticCompressionMode:
+    name: str
+    rho_c: float
+    quality: float
+
+
+@dataclass(frozen=True)
+class SemanticProfile:
+    name: str
+    strategy: str
+    modes: Tuple[SemanticCompressionMode, ...] = ()
+    target_thresholds: Tuple[Tuple[float, float], ...] = (
+        (-15.0, 0.80),
+        (-10.0, 0.88),
+        (-5.0, 0.925),
+        (0.0, 0.95),
+        (float("inf"), 0.965),
+    )
+
+
+@dataclass(frozen=True)
 class PaperParams:
     # Table III values.
     n_uav: int = 20
@@ -179,6 +200,9 @@ class Candidate:
     tx_target: np.ndarray
     rx_target: np.ndarray
     workload_bits: float
+    semantic_mode: str = "raw"
+    semantic_ratio: float = 1.0
+    semantic_quality: float = 1.0
 
 
 @dataclass
@@ -202,6 +226,8 @@ class SimulationResult:
     avg_travel: np.ndarray
     encodes: np.ndarray
     decodes: np.ndarray
+    semantic_quality: np.ndarray
+    semantic_payload_ratio: np.ndarray
     sinr_samples: List[float]
     summary: Dict[str, float]
 
@@ -308,6 +334,38 @@ def workload_sample(rng: np.random.Generator, assumed: AssumedParams) -> float:
     return float(np.clip(value, assumed.workload_min_bits, assumed.workload_max_bits))
 
 
+def semantic_choice(
+    sem_tx: int,
+    sinr_db: float,
+    paper: PaperParams,
+    profile: Optional[SemanticProfile],
+) -> Tuple[str, float, float]:
+    if not sem_tx:
+        return "raw", 1.0, 1.0
+    if profile is None:
+        return "fixed", paper.rho_c, 1.0
+    if profile.strategy == "fixed":
+        if profile.modes:
+            mode = profile.modes[0]
+            return mode.name, mode.rho_c, mode.quality
+        return profile.name, paper.rho_c, 1.0
+    if profile.strategy != "adaptive":
+        raise ValueError(f"Unknown semantic profile strategy {profile.strategy!r}")
+    if not profile.modes:
+        return profile.name, paper.rho_c, 1.0
+
+    target_quality = profile.target_thresholds[-1][1]
+    for upper_sinr, required_quality in profile.target_thresholds:
+        if sinr_db < upper_sinr:
+            target_quality = required_quality
+            break
+    for mode in sorted(profile.modes, key=lambda item: item.rho_c):
+        if mode.quality >= target_quality:
+            return mode.name, mode.rho_c, mode.quality
+    mode = max(profile.modes, key=lambda item: item.quality)
+    return mode.name, mode.rho_c, mode.quality
+
+
 def make_candidate(
     tx: int,
     rx: int,
@@ -322,6 +380,7 @@ def make_candidate(
     paper: PaperParams,
     assumed: AssumedParams,
     rng: Optional[np.random.Generator] = None,
+    semantic_profile: Optional[SemanticProfile] = None,
 ) -> Candidate:
     tx_target = target_above(device_positions[source], tx, paper)
     rx_target = target_above(device_positions[dest], rx, paper)
@@ -331,10 +390,12 @@ def make_candidate(
     t_move_rx = travel_time(d_rx, paper)
     sinr = link_sinr(tx_target, rx_target, active, device_positions, paper, assumed.density_interference_scale, rng)
     rate = paper.carrier_bandwidth * math.log2(1.0 + sinr)
-    payload_bits = workload_bits * (paper.rho_c if sem_tx else 1.0)
+    sinr_db = 10.0 * math.log10(max(sinr, 1e-12))
+    semantic_mode, semantic_ratio, semantic_quality = semantic_choice(sem_tx, sinr_db, paper, semantic_profile)
+    payload_bits = workload_bits * (semantic_ratio if sem_tx else 1.0)
     phi = max(0.15, min(1.0, workload_bits / assumed.workload_max_bits))
     t_encode = sem_tx * workload_bits * phi / paper.enc_bitrate
-    t_decode = sem_tx * sem_rx * paper.rho_c * paper.rho_r * workload_bits / paper.dec_bitrate
+    t_decode = sem_tx * sem_rx * semantic_ratio * paper.rho_r * workload_bits / paper.dec_bitrate
     t_d2d = payload_bits / max(rate, 1e-9)
     t_hover = t_d2d + t_encode + t_decode
     duration = max(t_move_tx, t_move_rx) + t_hover
@@ -342,7 +403,6 @@ def make_candidate(
     e_nonflight = assumed.p_d2d_radio * t_d2d + assumed.p_encode * t_encode + assumed.p_decode * t_decode
     cost = duration + assumed.energy_weight * (e_flight + e_nonflight)
     travel_distance = d_tx + d_rx
-    sinr_db = 10.0 * math.log10(max(sinr, 1e-12))
     return Candidate(
         tx=tx,
         rx=rx,
@@ -364,6 +424,9 @@ def make_candidate(
         tx_target=tx_target,
         rx_target=rx_target,
         workload_bits=workload_bits,
+        semantic_mode=semantic_mode,
+        semantic_ratio=semantic_ratio,
+        semantic_quality=semantic_quality,
     )
 
 
@@ -378,6 +441,7 @@ def enumerate_candidates(
     paper: PaperParams,
     assumed: AssumedParams,
     semantic_enabled: bool,
+    semantic_profile: Optional[SemanticProfile] = None,
 ) -> List[Candidate]:
     states = [(0, 0)] if not semantic_enabled else [(0, 0), (1, 0), (1, 1)]
     out: List[Candidate] = []
@@ -386,7 +450,23 @@ def enumerate_candidates(
             if tx == rx:
                 continue
             for sem_tx, sem_rx in states:
-                out.append(make_candidate(tx, rx, sem_tx, sem_rx, source, dest, workload_bits, uav_positions, device_positions, active, paper, assumed))
+                out.append(
+                    make_candidate(
+                        tx,
+                        rx,
+                        sem_tx,
+                        sem_rx,
+                        source,
+                        dest,
+                        workload_bits,
+                        uav_positions,
+                        device_positions,
+                        active,
+                        paper,
+                        assumed,
+                        semantic_profile=semantic_profile,
+                    )
+                )
     return out
 
 
@@ -496,12 +576,27 @@ def random_candidate(
     assumed: AssumedParams,
     semantic_enabled: bool,
     rng: np.random.Generator,
+    semantic_profile: Optional[SemanticProfile] = None,
 ) -> Candidate:
     tx = available_uavs[int(rng.integers(0, len(available_uavs)))]
     rx_choices = [u for u in available_uavs if u != tx]
     rx = rx_choices[int(rng.integers(0, len(rx_choices)))]
     sem_tx, sem_rx = random_state(rng, semantic_enabled, assumed)
-    return make_candidate(tx, rx, sem_tx, sem_rx, source, dest, workload, uav_positions, device_positions, active, paper, assumed)
+    return make_candidate(
+        tx,
+        rx,
+        sem_tx,
+        sem_rx,
+        source,
+        dest,
+        workload,
+        uav_positions,
+        device_positions,
+        active,
+        paper,
+        assumed,
+        semantic_profile=semantic_profile,
+    )
 
 
 def sampled_candidates(
@@ -517,6 +612,7 @@ def sampled_candidates(
     assumed: AssumedParams,
     semantic_enabled: bool,
     rng: np.random.Generator,
+    semantic_profile: Optional[SemanticProfile] = None,
 ) -> List[Candidate]:
     out: List[Candidate] = []
     seen = set()
@@ -531,11 +627,42 @@ def sampled_candidates(
         if key in seen:
             continue
         seen.add(key)
-        out.append(make_candidate(tx, rx, sem_tx, sem_rx, source, dest, workload, uav_positions, device_positions, active, paper, assumed))
+        out.append(
+            make_candidate(
+                tx,
+                rx,
+                sem_tx,
+                sem_rx,
+                source,
+                dest,
+                workload,
+                uav_positions,
+                device_positions,
+                active,
+                paper,
+                assumed,
+                semantic_profile=semantic_profile,
+            )
+        )
         if len(out) >= count:
             break
     if not out:
-        out.append(random_candidate(available_uavs, source, dest, workload, uav_positions, device_positions, active, paper, assumed, semantic_enabled, rng))
+        out.append(
+            random_candidate(
+                available_uavs,
+                source,
+                dest,
+                workload,
+                uav_positions,
+                device_positions,
+                active,
+                paper,
+                assumed,
+                semantic_enabled,
+                rng,
+                semantic_profile,
+            )
+        )
     return out
 
 
@@ -554,15 +681,55 @@ def select_candidate_for_policy(
     rng: np.random.Generator,
     linucb: Optional[LinUCB],
     area: float,
+    semantic_profile: Optional[SemanticProfile] = None,
 ) -> Candidate:
     if policy == "Stochastic":
-        return random_candidate(available_uavs, source, dest, workload, uav_positions, device_positions, active, paper, assumed, semantic_enabled, rng)
+        return random_candidate(
+            available_uavs,
+            source,
+            dest,
+            workload,
+            uav_positions,
+            device_positions,
+            active,
+            paper,
+            assumed,
+            semantic_enabled,
+            rng,
+            semantic_profile,
+        )
     if policy == "SA":
-        current = random_candidate(available_uavs, source, dest, workload, uav_positions, device_positions, active, paper, assumed, semantic_enabled, rng)
+        current = random_candidate(
+            available_uavs,
+            source,
+            dest,
+            workload,
+            uav_positions,
+            device_positions,
+            active,
+            paper,
+            assumed,
+            semantic_enabled,
+            rng,
+            semantic_profile,
+        )
         best = current
         temp = assumed.sa_temperature
         for _ in range(assumed.sa_iterations):
-            proposal = random_candidate(available_uavs, source, dest, workload, uav_positions, device_positions, active, paper, assumed, semantic_enabled, rng)
+            proposal = random_candidate(
+                available_uavs,
+                source,
+                dest,
+                workload,
+                uav_positions,
+                device_positions,
+                active,
+                paper,
+                assumed,
+                semantic_enabled,
+                rng,
+                semantic_profile,
+            )
             delta = proposal.cost - current.cost
             if delta <= 0 or rng.random() < math.exp(-delta / max(temp, 1e-9)):
                 current = proposal
@@ -584,6 +751,7 @@ def select_candidate_for_policy(
             assumed,
             semantic_enabled,
             rng,
+            semantic_profile,
         )
         return min(candidates, key=lambda c: c.cost - (0.35 if c.sem_tx else 0.0))
     if policy == "LinUCB" and assumed.linucb_candidate_samples > 0:
@@ -600,6 +768,7 @@ def select_candidate_for_policy(
             assumed,
             semantic_enabled,
             rng,
+            semantic_profile,
         )
     else:
         candidates = enumerate_candidates(
@@ -613,6 +782,7 @@ def select_candidate_for_policy(
             paper,
             assumed,
             semantic_enabled,
+            semantic_profile,
         )
     return policy_select(policy, candidates, rng, assumed, linucb, area)
 
@@ -624,6 +794,7 @@ def run_single(
     semantic_enabled: bool,
     paper: PaperParams,
     assumed: AssumedParams,
+    semantic_profile: Optional[SemanticProfile] = None,
 ) -> SimulationResult:
     seed = assumed.seed + area * 97 + repeat * 1009 + (0 if semantic_enabled else 500_000) + POLICIES.index(policy) * 100_003
     rng = np.random.default_rng(seed)
@@ -649,6 +820,8 @@ def run_single(
     avg_travel_series = np.zeros(paper.t_slots + 1)
     encode_series = np.zeros(paper.t_slots + 1)
     decode_series = np.zeros(paper.t_slots + 1)
+    semantic_quality_series = np.zeros(paper.t_slots + 1)
+    semantic_payload_ratio_series = np.zeros(paper.t_slots + 1)
 
     completed = 0
     cumulative_flight = 0.0
@@ -657,6 +830,13 @@ def run_single(
     cumulative_travel = 0.0
     cumulative_encodes = 0
     cumulative_decodes = 0
+    cumulative_semantic_quality = 0.0
+    cumulative_semantic_payload_ratio = 0.0
+    semantic_mode_counts: Dict[str, float] = {"raw": 0.0, "fixed": 0.0}
+    if semantic_profile is not None:
+        semantic_mode_counts[semantic_profile.name] = 0.0
+        for mode in semantic_profile.modes:
+            semantic_mode_counts[mode.name] = 0.0
     sinr_samples: List[float] = []
 
     for t in range(1, paper.t_slots + 1):
@@ -679,6 +859,9 @@ def run_single(
                 cumulative_travel += c.travel_distance
                 cumulative_encodes += int(c.sem_tx)
                 cumulative_decodes += int(c.sem_rx)
+                cumulative_semantic_quality += c.semantic_quality
+                cumulative_semantic_payload_ratio += c.semantic_ratio
+                semantic_mode_counts[c.semantic_mode] = semantic_mode_counts.get(c.semantic_mode, 0.0) + 1.0
                 sinr_samples.append(c.sinr_db)
                 if linucb is not None:
                     linucb.update(c, area, assumed)
@@ -715,6 +898,7 @@ def run_single(
                 rng,
                 linucb,
                 float(area),
+                semantic_profile,
             )
             noisy_selected = make_candidate(
                 selected.tx,
@@ -730,6 +914,7 @@ def run_single(
                 paper,
                 assumed,
                 rng,
+                semantic_profile,
             )
             uav_busy[noisy_selected.tx] = True
             uav_busy[noisy_selected.rx] = True
@@ -756,6 +941,8 @@ def run_single(
         avg_travel_series[t] = cumulative_travel / denom
         encode_series[t] = cumulative_encodes
         decode_series[t] = cumulative_decodes
+        semantic_quality_series[t] = cumulative_semantic_quality / denom
+        semantic_payload_ratio_series[t] = cumulative_semantic_payload_ratio / denom
 
     summary = {
         "finished": float(completed),
@@ -765,8 +952,13 @@ def run_single(
         "avg_travel": cumulative_travel / max(completed, 1),
         "encodes": float(cumulative_encodes),
         "decodes": float(cumulative_decodes),
+        "semantic_quality": cumulative_semantic_quality / max(completed, 1),
+        "semantic_payload_ratio": cumulative_semantic_payload_ratio / max(completed, 1),
         "sinr_median_db": float(statistics.median(sinr_samples)) if sinr_samples else float("nan"),
     }
+    for mode_name, count in semantic_mode_counts.items():
+        safe_name = mode_name.replace("-", "_").replace(" ", "_")
+        summary[f"mode_{safe_name}_count"] = float(count)
     return SimulationResult(
         finished=finished_series,
         flight_energy_per_req=flight_series,
@@ -775,6 +967,8 @@ def run_single(
         avg_travel=avg_travel_series,
         encodes=encode_series,
         decodes=decode_series,
+        semantic_quality=semantic_quality_series,
+        semantic_payload_ratio=semantic_payload_ratio_series,
         sinr_samples=sinr_samples,
         summary=summary,
     )
@@ -789,6 +983,8 @@ def aggregate(results: Sequence[SimulationResult]) -> SimulationResult:
         "avg_travel",
         "encodes",
         "decodes",
+        "semantic_quality",
+        "semantic_payload_ratio",
     ]
     arrays = {name: np.mean([getattr(r, name) for r in results], axis=0) for name in attrs}
     samples: List[float] = []
@@ -806,6 +1002,8 @@ def aggregate(results: Sequence[SimulationResult]) -> SimulationResult:
         avg_travel=arrays["avg_travel"],
         encodes=arrays["encodes"],
         decodes=arrays["decodes"],
+        semantic_quality=arrays["semantic_quality"],
+        semantic_payload_ratio=arrays["semantic_payload_ratio"],
         sinr_samples=samples,
         summary=summary,
     )
@@ -1014,7 +1212,7 @@ def make_plots(results: Dict[str, Dict[int, Dict[str, SimulationResult]]], out_d
 def write_summary_csv(results: Dict[str, Dict[int, Dict[str, SimulationResult]]], out_dir: Path) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "summary_metrics.csv"
-    fields = [
+    core_fields = [
         "mode",
         "area",
         "policy",
@@ -1025,15 +1223,29 @@ def write_summary_csv(results: Dict[str, Dict[int, Dict[str, SimulationResult]]]
         "avg_travel",
         "encodes",
         "decodes",
+        "semantic_quality",
+        "semantic_payload_ratio",
         "sinr_median_db",
     ]
+    extra_fields = sorted(
+        {
+            key
+            for mode_results in results.values()
+            for area_results in mode_results.values()
+            for result in area_results.values()
+            for key in result.summary
+            if key not in core_fields
+        }
+    )
+    fields = core_fields + extra_fields
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fields)
         writer.writeheader()
         for mode, mode_results in results.items():
             for area, area_results in mode_results.items():
                 for policy, result in area_results.items():
-                    row = {"mode": mode, "area": area, "policy": policy}
+                    row = {field: "" for field in fields}
+                    row.update({"mode": mode, "area": area, "policy": policy})
                     row.update(result.summary)
                     writer.writerow(row)
     return path
@@ -1052,6 +1264,8 @@ def write_timeseries_npz(results: Dict[str, Dict[int, Dict[str, SimulationResult
                 arrays[f"{prefix}_avg_travel"] = result.avg_travel
                 arrays[f"{prefix}_encodes"] = result.encodes
                 arrays[f"{prefix}_decodes"] = result.decodes
+                arrays[f"{prefix}_semantic_quality"] = result.semantic_quality
+                arrays[f"{prefix}_semantic_payload_ratio"] = result.semantic_payload_ratio
                 arrays[f"{prefix}_sinr"] = np.array(result.sinr_samples, dtype=float)
     path = out_dir / "timeseries_and_sinr_samples.npz"
     np.savez_compressed(path, **arrays)
