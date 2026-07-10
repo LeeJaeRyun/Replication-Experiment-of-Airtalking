@@ -1,0 +1,41 @@
+{
+  "source": "trained_cityscapes_rgb_to_semantic_encoder_decoder",
+  "rho_c_feature_uncompressed_mean": 0.10416666666666667,
+  "rho_c_feature_png_mean": 0.10416666666666667,
+  "rho_c_uncompressed_mean": 0.10416666666666667,
+  "rho_c_png_mean": 0.10416666666666667,
+  "rho_r_proxy": 3.0,
+  "encode_bitrate_mbps_median": 112.40202078490381,
+  "decode_bitrate_mbps_median": 24.297069475861157,
+  "feature_encode_bitrate_mbps_median": 112.40202078490381,
+  "feature_decode_bitrate_mbps_median": 24.297069475861157,
+  "semantic_quality_miou_final": 0.2134733945131302,
+  "semantic_quality_miou_best": 0.2134733945131302,
+  "pixel_accuracy_final": 0.7407952547073364,
+  "pixel_accuracy_best": 0.7407952547073364,
+  "num_samples": 256,
+  "model": {
+    "name": "paperlite",
+    "latent_channels": 20,
+    "width": 8,
+    "downsample_factor": 8,
+    "quantization_bits_assumed": 8,
+    "payload_ratio": 0.10416666666666667
+  },
+  "timing": {
+    "encode_ms_median": 1.74915004754439,
+    "decode_ms_median": 2.528700017137453,
+    "full_ms_median": 4.484750010306016
+  },
+  "paper_comparison": {
+    "paper_rho_c": 0.104,
+    "paper_rho_r": 3.0,
+    "rho_c_abs_error": 0.00016666666666667607,
+    "rho_c_rel_error_pct": 0.1602564102564193,
+    "paper_encoding_bitrate_mbps": 91.3,
+    "paper_decoding_bitrate_mbps": 23.23,
+    "measured_encode_input_throughput_mbps": 112.40202078490381,
+    "measured_decode_latent_throughput_mbps": 8.099023158620387,
+    "measured_decode_restoration_throughput_mbps": 24.297069475861157
+  }
+}

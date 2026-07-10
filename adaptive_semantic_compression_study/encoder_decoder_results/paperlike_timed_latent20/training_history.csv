@@ -1,0 +1,2 @@
+epoch,train_loss,val_loss,val_pixel_accuracy,val_mean_iou,valid_classes,lr
+0,,1.6053544357419014,0.7407952547073364,0.2134733945131302,19,0.001

@@ -1,0 +1,64 @@
+{
+  "experiment": "cityscapes_rgb_to_semantic_encoder_decoder",
+  "device": "cpu",
+  "train_samples": 512,
+  "val_samples": 256,
+  "epochs": 0,
+  "image_size": {
+    "width": 128,
+    "height": 64
+  },
+  "model": {
+    "name": "paperlite",
+    "latent_channels": 20,
+    "width": 8,
+    "downsample_factor": 8,
+    "quantization_bits_assumed": 8,
+    "payload_ratio": 0.10416666666666667
+  },
+  "training": {
+    "class_balanced_loss": true,
+    "scheduler": "cosine",
+    "learning_rate": 0.001
+  },
+  "final_metrics": {
+    "epoch": 0,
+    "train_loss": null,
+    "val_loss": 1.6053544357419014,
+    "val_pixel_accuracy": 0.7407952547073364,
+    "val_mean_iou": 0.2134733945131302,
+    "valid_classes": 19,
+    "lr": 0.001
+  },
+  "best_metrics": {
+    "epoch": 27,
+    "train_loss": 1.0020165769383311,
+    "val_loss": 1.6053544357419014,
+    "val_pixel_accuracy": 0.7407952547073364,
+    "val_mean_iou": 0.2134733945131302,
+    "valid_classes": 19,
+    "lr": 7.324815475980209e-05
+  },
+  "timing": {
+    "encode_ms_median": 1.74915004754439,
+    "decode_ms_median": 2.528700017137453,
+    "full_ms_median": 4.484750010306016
+  },
+  "paper_comparison": {
+    "paper_rho_c": 0.104,
+    "paper_rho_r": 3.0,
+    "rho_c_abs_error": 0.00016666666666667607,
+    "rho_c_rel_error_pct": 0.1602564102564193,
+    "paper_encoding_bitrate_mbps": 91.3,
+    "paper_decoding_bitrate_mbps": 23.23,
+    "measured_encode_input_throughput_mbps": 112.40202078490381,
+    "measured_decode_latent_throughput_mbps": 8.099023158620387,
+    "measured_decode_restoration_throughput_mbps": 24.297069475861157
+  },
+  "elapsed_seconds": 17.891213900002185,
+  "notes": [
+    "This is a real trainable neural encoder/decoder baseline, not the earlier label-resize proxy.",
+    "Payload ratio assumes 8-bit quantized latent features. Entropy coding is not implemented in this baseline.",
+    "CPU smoke runs are for pipeline validation; paper-grade metrics need longer training and preferably GPU."
+  ]
+}
