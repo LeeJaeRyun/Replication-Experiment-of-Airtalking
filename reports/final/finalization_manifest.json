@@ -34,25 +34,36 @@
     "docx": [
       {
         "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\01_인코더_디코더_딥러닝_과정_final.docx",
-        "sha256": "0cccae2defe90678b403385183d085cbe6a2cb3535284cc867e755601d0c57bc",
-        "size_bytes": 774219
+        "sha256": "61f17775d327feb13995f3e3d60a4b37f7537a3215d9ae9daee64f3ef963ffff",
+        "size_bytes": 782692
       },
       {
         "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\02_AirTalking_논문_실험_재현_final.docx",
-        "sha256": "7626d4b6a6bec52b36b8cd1ab749866da8b209584eebaa1706bc655318d4747d",
-        "size_bytes": 155421
+        "sha256": "415bb9084894fe9f1eea82bd9d9e06905d3680abb40285c6769c20be01848197",
+        "size_bytes": 165984
       },
       {
         "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\03_후속연구_적응형_의미압축_final.docx",
-        "sha256": "47a0b11f9b22f763ad7d751846e202be710251c88e5736f7f946e9a0b5f536f4",
-        "size_bytes": 113153
+        "sha256": "06e5697902466f3dd93beafa3563606d457d0c1ccfa2d5ab769496ad3fbd09b6",
+        "size_bytes": 127141
       }
     ]
   },
   "finalizer_source": {
     "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\tools\\finalize_research_reports.py",
-    "sha256": "b453bd37b226e8ec02190ea7998dbf85029772779ffbe5fb58d0078d732455e9"
+    "sha256": "61e0e025c31e72b95f8b417f0090bbcb0c6d0ac1842fe685f4574e12405cc218"
   },
+  "docx_converter_source": {
+    "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\tools\\finalize_research_reports.py",
+    "sha256": "61e0e025c31e72b95f8b417f0090bbcb0c6d0ac1842fe685f4574e12405cc218",
+    "function": "markdown_to_docx"
+  },
+  "docx_renderer_source": {
+    "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\tools\\docx_report_design.py",
+    "sha256": "4c2a2d45913eefdc6bb150d10efa0038d503e263c9628276d7994dd18644e685",
+    "function": "build_docx"
+  },
+  "docx_generated_at_utc": "2026-07-12T17:58:40+00:00",
   "input_directories": {
     "enhanced": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified",
     "reproduction": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified",

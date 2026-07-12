@@ -10,6 +10,7 @@ import statistics
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 
@@ -732,18 +733,21 @@ class FinalizeResearchReportsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "pixel.png").write_bytes(png)
-            markdown = root / "sample.md"
+            markdown = root / "01_sample.md"
             markdown.write_text(
-                "# 제목\n\n본문 **강조**와 `코드`.\n\n"
+                "# 제목\n\n## 첫 절\n\n본문 **강조**와 `코드`, 수식 \\(\\rho_c=0.104\\).\n\n"
+                "\\[\nR=B\\log_2(1+SINR)\n\\]\n\n"
                 "- 목록\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n"
-                "```python\nprint('ok')\n```\n\n![픽셀](pixel.png)\n",
+                "```python\nprint('ok')\n```\n\n"
+                "![픽셀](pixel.png)\n",
                 encoding="utf-8",
             )
             docx = root / "sample.docx"
             warnings: list[str] = []
             finalizer.markdown_to_docx(markdown, docx, warnings)
             self.assertTrue(docx.is_file())
-            self.assertEqual(warnings, [])
+            self.assertEqual(len(warnings), 1)
+            self.assertIn("그림 출처 정보 미등록", warnings[0])
 
             from docx import Document
 
@@ -753,7 +757,64 @@ class FinalizeResearchReportsTests(unittest.TestCase):
             all_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
             self.assertIn("print('ok')", all_text)
             self.assertIn("목록", all_text)
+            self.assertNotIn("**", all_text)
+            self.assertNotIn(r"\(", all_text)
+            source_text = "\n".join(
+                paragraph.text
+                for paragraph in document.paragraphs
+                if paragraph.style.name == "Report Source"
+            )
+            self.assertIn("출처 정보 미등록", source_text)
+            self.assertIn("제작자·원천 데이터·생성 장비", source_text)
+            self.assertEqual(document.core_properties.title, "제목")
+            self.assertNotEqual(document.core_properties.created.year, 2013)
+            self.assertEqual(document.core_properties.last_modified_by, "AirTalking DOCX report renderer")
+            self.assertIn("AIRTALKING REPLICATION", document.sections[0].header.paragraphs[0].text)
+            self.assertIn("Report Formula", {paragraph.style.name for paragraph in document.paragraphs})
+            self.assertEqual(sum(paragraph.style.name == "Heading 1" for paragraph in document.paragraphs), 1)
+            footer_xml = document.sections[0].footer._element.xml
+            self.assertIn('w:instr="PAGE"', footer_xml)
+            self.assertIn("w:tblHeader", document.tables[0].rows[0]._tr.xml)
+            self.assertIn('w:fill="17324D"', document.tables[0].rows[0].cells[0]._tc.xml)
             self.assertGreaterEqual(len(document.inline_shapes), 1)
+            self.assertEqual(document.inline_shapes[0]._inline.docPr.get("descr"), "픽셀")
+            with zipfile.ZipFile(docx) as archive:
+                app_xml = archive.read("docProps/app.xml").decode("utf-8")
+            self.assertNotIn("<Pages>", app_xml)
+            self.assertIn("AirTalking DOCX Renderer", app_xml)
+
+    def test_docx_math_and_registered_figure_provenance_are_not_corrupted(self) -> None:
+        from tools.docx_report_design import _figure_source_text, _latex_to_readable
+
+        self.assertEqual(
+            _latex_to_readable(r"1+s\left(\frac{100}{\text{span}}\right)^2"),
+            "1+s((100)/(span))²",
+        )
+        self.assertEqual(
+            _latex_to_readable(r"t_{enc}=\frac{W\phi}{v_{enc}}"),
+            "t_enc=(Wφ)/(v_enc)",
+        )
+        self.assertEqual(
+            _latex_to_readable(r"R=B\log_2(1+SINR)"),
+            "R=B log₂(1+SINR)",
+        )
+        panel = (
+            ROOT
+            / "studies"
+            / "neural_encoder_decoder"
+            / "results"
+            / "enhanced_scalable_full_256x128_verified"
+            / "qualitative_panel_paper_like.png"
+        )
+        provenance = _figure_source_text(panel)
+        self.assertIn("Cityscapes", provenance)
+        self.assertIn("NVIDIA GeForce RTX 4060 Ti", provenance)
+        self.assertIn("본 연구에서 직접 생성", provenance)
+
+    def test_refresh_all_docx_reports_is_package_importable(self) -> None:
+        import tools.refresh_all_docx_reports as refresher
+
+        self.assertEqual(len(refresher.CANONICAL_REPORTS), 4)
 
     def test_verdict_count_and_paired_delta_use_only_recorded_rows(self) -> None:
         evidence = finalizer.Evidence(

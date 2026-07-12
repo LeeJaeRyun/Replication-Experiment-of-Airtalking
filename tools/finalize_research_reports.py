@@ -25,6 +25,7 @@ import re
 import statistics
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path, PureWindowsPath
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -2729,219 +2730,36 @@ def _is_table_separator(line: str) -> bool:
     return bool(cells) and all(re.fullmatch(r":?-{3,}:?", cell.replace(" ", "")) for cell in cells)
 
 
-def _set_korean_font(run: Any, *, size: float | None = None, monospace: bool = False) -> None:
-    from docx.oxml.ns import qn
-    from docx.shared import Pt
-
-    font = "Consolas" if monospace else "Malgun Gothic"
-    run.font.name = font
-    run._element.get_or_add_rPr().rFonts.set(qn("w:eastAsia"), font)
-    if size is not None:
-        run.font.size = Pt(size)
-
-
-def _add_inline_runs(paragraph: Any, text: str) -> None:
-    token_re = re.compile(r"(\*\*.+?\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))")
-    position = 0
-    for match in token_re.finditer(text):
-        if match.start() > position:
-            run = paragraph.add_run(text[position : match.start()])
-            _set_korean_font(run)
-        token = match.group(0)
-        if token.startswith("**"):
-            run = paragraph.add_run(token[2:-2])
-            run.bold = True
-            _set_korean_font(run)
-        elif token.startswith("`"):
-            run = paragraph.add_run(token[1:-1])
-            _set_korean_font(run, monospace=True)
-        else:
-            link_match = re.fullmatch(r"\[([^\]]+)\]\(([^)]+)\)", token)
-            label, target = link_match.groups() if link_match else (token, "")
-            run = paragraph.add_run(f"{label} ({target})")
-            run.underline = True
-            _set_korean_font(run)
-        position = match.end()
-    if position < len(text):
-        run = paragraph.add_run(text[position:])
-        _set_korean_font(run)
-
-
-def markdown_to_docx(markdown_path: Path, docx_path: Path, warnings: list[str]) -> None:
+def markdown_to_docx(
+    markdown_path: Path,
+    docx_path: Path,
+    warnings: list[str],
+    *,
+    generated_at: datetime | None = None,
+) -> None:
     try:
-        from docx import Document
-        from docx.enum.table import WD_TABLE_ALIGNMENT
-        from docx.enum.text import WD_ALIGN_PARAGRAPH
-        from docx.oxml import OxmlElement
-        from docx.oxml.ns import qn
-        from docx.shared import Inches, Pt
+        try:
+            from tools.docx_report_design import build_docx
+        except ModuleNotFoundError:
+            from docx_report_design import build_docx
     except ImportError as exc:
         raise ReportFinalizationError(
             "DOCX 생성을 위해 python-docx가 필요합니다. requirements.txt를 설치하세요."
         ) from exc
 
-    document = Document()
-    section = document.sections[0]
-    section.top_margin = Inches(0.75)
-    section.bottom_margin = Inches(0.75)
-    section.left_margin = Inches(0.75)
-    section.right_margin = Inches(0.75)
-    normal = document.styles["Normal"]
-    normal.font.name = "Malgun Gothic"
-    normal._element.get_or_add_rPr().rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
-    normal.font.size = Pt(10.5)
-    for level in range(1, 4):
-        style = document.styles[f"Heading {level}"]
-        style.font.name = "Malgun Gothic"
-        style._element.get_or_add_rPr().rFonts.set(qn("w:eastAsia"), "Malgun Gothic")
-
-    lines = markdown_path.read_text(encoding="utf-8-sig").splitlines()
-    index = 0
-    in_code = False
-    code_lines: list[str] = []
-    paragraph_lines: list[str] = []
-
-    def flush_paragraph() -> None:
-        if not paragraph_lines:
-            return
-        paragraph = document.add_paragraph()
-        _add_inline_runs(paragraph, " ".join(line.strip() for line in paragraph_lines))
-        paragraph_lines.clear()
-
-    def flush_code() -> None:
-        if not code_lines:
-            return
-        paragraph = document.add_paragraph()
-        paragraph.paragraph_format.left_indent = Inches(0.25)
-        paragraph.paragraph_format.space_before = Pt(3)
-        paragraph.paragraph_format.space_after = Pt(6)
-        run = paragraph.add_run("\n".join(code_lines))
-        _set_korean_font(run, size=8.5, monospace=True)
-        shading = OxmlElement("w:shd")
-        shading.set(qn("w:fill"), "F2F2F2")
-        paragraph._p.get_or_add_pPr().append(shading)
-        code_lines.clear()
-
-    while index < len(lines):
-        line = lines[index]
-        stripped = line.strip()
-        if stripped.startswith("```"):
-            flush_paragraph()
-            if in_code:
-                flush_code()
-                in_code = False
-            else:
-                in_code = True
-            index += 1
-            continue
-        if in_code:
-            code_lines.append(line)
-            index += 1
-            continue
-        if not stripped:
-            flush_paragraph()
-            index += 1
-            continue
-
-        image_match = re.fullmatch(r"!\[([^\]]*)\]\(([^)]+)\)", stripped)
-        if image_match:
-            flush_paragraph()
-            alt, raw_path = image_match.groups()
-            raw_path = raw_path.strip().strip("<>")
-            image_path = Path(raw_path)
-            if not image_path.is_absolute():
-                image_path = (markdown_path.parent / image_path).resolve()
-            if image_path.is_file():
-                try:
-                    document.add_picture(str(image_path), width=Inches(6.6))
-                    caption = document.add_paragraph(alt)
-                    caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    if caption.runs:
-                        caption.runs[0].italic = True
-                        _set_korean_font(caption.runs[0], size=9)
-                except Exception as exc:  # python-docx/Pillow raise several concrete types
-                    warnings.append(f"DOCX 그림 삽입 실패: {image_path}: {exc}")
-                    paragraph = document.add_paragraph(f"[그림 삽입 실패: {alt} — {image_path}]")
-                    _set_korean_font(paragraph.runs[0])
-            else:
-                warnings.append(f"DOCX 로컬 그림 경로가 오래되었거나 없습니다: {image_path}")
-                paragraph = document.add_paragraph(f"[그림 증거 없음: {alt} — {image_path}]")
-                _set_korean_font(paragraph.runs[0])
-            index += 1
-            continue
-
-        heading = re.match(r"^(#{1,6})\s+(.+)$", stripped)
-        if heading:
-            flush_paragraph()
-            level = min(len(heading.group(1)), 3)
-            paragraph = document.add_heading(level=level)
-            _add_inline_runs(paragraph, heading.group(2))
-            index += 1
-            continue
-
-        if "|" in stripped and index + 1 < len(lines) and _is_table_separator(lines[index + 1]):
-            flush_paragraph()
-            headers = _split_md_row(line)
-            table_rows: list[list[str]] = []
-            index += 2
-            while index < len(lines) and "|" in lines[index] and lines[index].strip():
-                row = _split_md_row(lines[index])
-                if len(row) != len(headers):
-                    break
-                table_rows.append(row)
-                index += 1
-            table = document.add_table(rows=1, cols=len(headers))
-            table.style = "Table Grid"
-            table.alignment = WD_TABLE_ALIGNMENT.CENTER
-            for column, value in enumerate(headers):
-                paragraph = table.rows[0].cells[column].paragraphs[0]
-                _add_inline_runs(paragraph, value)
-                for run in paragraph.runs:
-                    run.bold = True
-            for values in table_rows:
-                cells = table.add_row().cells
-                for column, value in enumerate(values):
-                    _add_inline_runs(cells[column].paragraphs[0], value.replace("<br>", "\n"))
-            continue
-
-        bullet = re.match(r"^(\s*)[-*+]\s+(.+)$", line)
-        numbered = re.match(r"^(\s*)\d+[.)]\s+(.+)$", line)
-        if bullet or numbered:
-            flush_paragraph()
-            match = bullet or numbered
-            style = "List Bullet" if bullet else "List Number"
-            paragraph = document.add_paragraph(style=style)
-            indent_level = min(len(match.group(1).expandtabs(4)) // 2, 4)
-            paragraph.paragraph_format.left_indent = Inches(0.25 * indent_level)
-            _add_inline_runs(paragraph, match.group(2))
-            index += 1
-            continue
-
-        if stripped.startswith(">"):
-            flush_paragraph()
-            paragraph = document.add_paragraph()
-            paragraph.paragraph_format.left_indent = Inches(0.3)
-            run = paragraph.add_run(stripped.lstrip("> "))
-            run.italic = True
-            _set_korean_font(run)
-            index += 1
-            continue
-
-        if re.fullmatch(r"[-*_]{3,}", stripped):
-            flush_paragraph()
-            document.add_paragraph("―" * 30)
-            index += 1
-            continue
-
-        paragraph_lines.append(line)
-        index += 1
-
-    flush_paragraph()
-    if in_code:
-        flush_code()
-    document.core_properties.title = markdown_path.stem
-    docx_path.parent.mkdir(parents=True, exist_ok=True)
-    document.save(docx_path)
+    try:
+        build_docx(
+            markdown_path,
+            docx_path,
+            warnings,
+            split_md_row=_split_md_row,
+            is_table_separator=_is_table_separator,
+            generated_at=generated_at,
+        )
+    except ImportError as exc:
+        raise ReportFinalizationError(
+            "DOCX 생성을 위해 python-docx가 필요합니다. requirements.txt를 설치하세요."
+        ) from exc
 
 
 def finalize_reports(paths: InputPaths, *, allow_incomplete: bool = False) -> dict[str, Any]:
@@ -2965,12 +2783,19 @@ def finalize_reports(paths: InputPaths, *, allow_incomplete: bool = False) -> di
             raise ReportFinalizationError(f"최종 AUTO 0개 검사 실패: {path}")
 
     docx_paths: list[Path] = []
+    docx_generated_at = datetime.now(timezone.utc).replace(microsecond=0)
     for markdown_path in markdown_paths:
         docx_path = markdown_path.with_suffix(".docx")
-        markdown_to_docx(markdown_path, docx_path, diagnostics.warnings)
+        markdown_to_docx(
+            markdown_path,
+            docx_path,
+            diagnostics.warnings,
+            generated_at=docx_generated_at,
+        )
         docx_paths.append(docx_path)
 
     finalizer_source = Path(__file__).resolve()
+    renderer_source = ROOT / "tools" / "docx_report_design.py"
     artifact_records = {
         "markdown": [
             {
@@ -3001,6 +2826,16 @@ def finalize_reports(paths: InputPaths, *, allow_incomplete: bool = False) -> di
             "path": str(finalizer_source),
             "sha256": _sha256(finalizer_source),
         },
+        "docx_converter_source": {
+            "path": str(finalizer_source),
+            "sha256": _sha256(finalizer_source),
+            "function": "markdown_to_docx",
+        },
+        "docx_renderer_source": {
+            "path": str(renderer_source),
+            "sha256": _sha256(renderer_source),
+        },
+        "docx_generated_at_utc": docx_generated_at.isoformat(),
         "input_directories": {
             "enhanced": str(normalized.enhanced_dir),
             "reproduction": str(normalized.reproduction_dir),

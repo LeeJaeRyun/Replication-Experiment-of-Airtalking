@@ -5,14 +5,13 @@ from __future__ import annotations
 The canonical report sources live in ``reports/*.md`` and the strict finalizer
 writes the evidence-backed Markdown/DOCX files to ``reports/final``.  The three
 ``studies/*/reports/*Easy_Final_KR.docx`` paths are kept for compatibility, but
-they must not retain the old single-rate/proxy results.  This helper therefore
-converts the already-finalized Markdown files instead of maintaining a second
-set of hard-coded research claims.
+they must not retain the old single-rate/proxy results. This helper therefore
+mirrors the canonical final DOCX bytes instead of maintaining or rendering a
+second copy of the research claims.
 """
 
+import shutil
 from pathlib import Path
-
-from finalize_research_reports import markdown_to_docx
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,8 +53,13 @@ def refresh_compatibility_reports() -> tuple[list[Path], list[str]]:
             raise FileNotFoundError(
                 f"최신 최종 Markdown이 없습니다. strict finalizer를 먼저 실행하세요: {markdown_path}"
             )
+        canonical_docx = markdown_path.with_suffix(".docx")
+        if not canonical_docx.is_file():
+            raise FileNotFoundError(
+                f"최신 최종 DOCX가 없습니다. strict finalizer를 먼저 실행하세요: {canonical_docx}"
+            )
         docx_path.parent.mkdir(parents=True, exist_ok=True)
-        markdown_to_docx(markdown_path, docx_path, warnings)
+        shutil.copyfile(canonical_docx, docx_path)
         generated.append(docx_path)
     return generated, warnings
 

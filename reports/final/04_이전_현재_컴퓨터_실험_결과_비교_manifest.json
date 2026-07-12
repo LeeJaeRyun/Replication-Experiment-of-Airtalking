@@ -44,7 +44,7 @@
   ],
   "converter_source": {
     "path": "tools/finalize_research_reports.py",
-    "sha256": "b453bd37b226e8ec02190ea7998dbf85029772779ffbe5fb58d0078d732455e9",
+    "sha256": "61e0e025c31e72b95f8b417f0090bbcb0c6d0ac1842fe685f4574e12405cc218",
     "function": "markdown_to_docx"
   },
   "output_artifacts": {
@@ -55,12 +55,18 @@
     },
     "docx": {
       "path": "reports/final/04_이전_현재_컴퓨터_실험_결과_비교_final.docx",
-      "sha256": "5e5c4cc9538aa488d389daaa038b3fba4b0ec046fa3c9966d2dec1b4d19f2e13",
-      "size_bytes": 764849
+      "sha256": "b7c10f8c21cc956f2a80039f6d7d17c145805fa50e3f6369a4f6b9fa6f86d4e1",
+      "size_bytes": 772102
     }
   },
   "warnings": [
     "The previous computer's detailed hardware specifications were not recorded, so hardware-only speedup and training-time ratios cannot be calculated.",
     "The previous and current experiments differ in dataset size, resolution, model architecture, output tasks, quantization, and checkpoint selection; quality changes are system-level, not a controlled hardware-only effect."
-  ]
+  ],
+  "docx_renderer_source": {
+    "path": "tools/docx_report_design.py",
+    "sha256": "4c2a2d45913eefdc6bb150d10efa0038d503e263c9628276d7994dd18644e685",
+    "function": "build_docx"
+  },
+  "docx_generated_at_utc": "2026-07-12T17:58:40+00:00"
 }
