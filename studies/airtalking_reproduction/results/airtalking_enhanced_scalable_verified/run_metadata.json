@@ -1,0 +1,158 @@
+{
+  "paper_params": {
+    "n_uav": 20,
+    "n_device": 20,
+    "dt": 1.0,
+    "t_slots": 1000,
+    "repeats": 10,
+    "vmax_uav": 23.0,
+    "accel_uav": 3.0,
+    "decel_uav": 2.0,
+    "height_mean": 20.0,
+    "carrier_bandwidth": 80000000.0,
+    "carrier_frequency": 5000000000.0,
+    "p_uav_tx": 0.2,
+    "p_device_tx": 0.1,
+    "noise_psd": 4e-21,
+    "noise_figure_db": 5.0,
+    "alpha_u2u": 2.2,
+    "alpha_u2g": 2.7,
+    "k_u2u_db": 10.0,
+    "rho_c": 0.10416666666666667,
+    "rho_r": 3.0,
+    "enc_bitrate": 420057687.2715057,
+    "dec_bitrate": 81597688.34234388
+  },
+  "assumed_params": {
+    "request_probability": 0.012,
+    "device_diffusion": 0.9,
+    "device_speed_cap": 1.4,
+    "workload_mean_bits": 140000000.0,
+    "workload_std_bits": 35000000.0,
+    "workload_min_bits": 60000000.0,
+    "workload_max_bits": 260000000.0,
+    "p_move": 130.0,
+    "p_hover": 115.0,
+    "p_encode": 0.9,
+    "p_decode": 0.9,
+    "p_d2d_radio": 0.2,
+    "energy_weight": 0.000111111,
+    "density_interference_scale": 12.0,
+    "linucb_alpha": 0.55,
+    "linucb_lambda": 1.0,
+    "linucb_candidate_samples": 10,
+    "sa_iterations": 2,
+    "sa_temperature": 3.0,
+    "sa_cooling": 0.9,
+    "mcts_samples": 80,
+    "random_semantic_encode_probability": 0.25,
+    "random_semantic_decode_probability": 0.5,
+    "seed": 260707
+  },
+  "assumed_params_provenance": {
+    "base": "metadata",
+    "metadata_path": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_cityscapes_calibrated_final_p012\\run_metadata.json",
+    "cli_overrides": [],
+    "precedence": "--assumed overrides --assumed-metadata, which overrides defaults"
+  },
+  "semantic_profile": {
+    "source": "studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+    "applied": true,
+    "raw_basis": "uncompressed",
+    "profile_kind": "feature",
+    "encoder_mode": "measured",
+    "decoder_mode": "measured",
+    "rho_c": 0.10416666666666667,
+    "rho_r": 3.0,
+    "enc_bitrate": 420057687.2715057,
+    "dec_bitrate": 81597688.34234388,
+    "semantic_quality": 0.3054155422121846,
+    "num_samples": 500,
+    "palette_classes": null,
+    "simulation_profile": {
+      "applied": true,
+      "name": "fixed_neural_encoder_decoder",
+      "modes": [
+        {
+          "name": "neural_encoder_decoder",
+          "rho_c": 0.10416666666666667,
+          "quality": 0.3054155422121846
+        }
+      ]
+    }
+  },
+  "input_paths": {
+    "semantic_summary": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+    "assumed_metadata": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_cityscapes_calibrated_final_p012\\run_metadata.json"
+  },
+  "source_semantic_summary": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+  "source_assumed_metadata": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_cityscapes_calibrated_final_p012\\run_metadata.json",
+  "artifacts": {
+    "summary_metrics_csv": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\summary_metrics.csv",
+    "repeat_metrics_csv": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\repeat_metrics.csv",
+    "statistical_summary_csv": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\statistical_summary.csv",
+    "timeseries_npz": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\timeseries_and_sinr_samples.npz",
+    "figures_directory": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\figures"
+  },
+  "summary_metrics_csv": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\summary_metrics.csv",
+  "repeat_metrics_csv": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\repeat_metrics.csv",
+  "statistical_summary_csv": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\statistical_summary.csv",
+  "workers": 6,
+  "status": "completed",
+  "run_provenance": {
+    "started_utc": "2026-07-11T15:39:45.224963+00:00",
+    "finished_utc": "2026-07-11T15:41:19.025086+00:00",
+    "argv": [
+      "studies\\airtalking_reproduction\\code\\airtalking_reproduction.py",
+      "--semantic-summary",
+      "studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+      "--semantic-profile-kind",
+      "feature",
+      "--semantic-raw-basis",
+      "uncompressed",
+      "--semantic-encoder-mode",
+      "measured",
+      "--semantic-decoder-mode",
+      "measured",
+      "--assumed-metadata",
+      "studies\\airtalking_reproduction\\results\\airtalking_cityscapes_calibrated_final_p012\\run_metadata.json",
+      "--workers",
+      "6",
+      "--out",
+      "studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified"
+    ],
+    "command_windows": "studies\\airtalking_reproduction\\code\\airtalking_reproduction.py --semantic-summary studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json --semantic-profile-kind feature --semantic-raw-basis uncompressed --semantic-encoder-mode measured --semantic-decoder-mode measured --assumed-metadata studies\\airtalking_reproduction\\results\\airtalking_cityscapes_calibrated_final_p012\\run_metadata.json --workers 6 --out studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified",
+    "working_directory": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking",
+    "source": {
+      "path": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\code\\airtalking_reproduction.py",
+      "snapshot": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\simulation_source_snapshot.py",
+      "sha256": "6ad4392c9439e8a20a06b39b2767cd43cf33bd12cbf68551b034af4e5b144d73"
+    },
+    "input_sha256": {
+      "semantic_summary": "4e7ef21828e97075f4c8b5fdd51dd85a8f5427c6950c09915d5d13509fc67e08",
+      "assumed_metadata": "d4227f47432b5604818075670207204a1489734fc9e7ba451494fd3cbf48295d"
+    },
+    "artifact_sha256": {
+      "summary_metrics_csv": "4f87929abe015b10dd989cc05c0d5a3b4e10da1f71611f4f218b5a2a68b01787",
+      "repeat_metrics_csv": "1a1da2676435b7465188d7ece81a4eefb9eaaee8de3713cc4a00ef1842d59709",
+      "statistical_summary_csv": "b2e4518f754c906d9671c498eb94a3f9cd64f9e7e18157fc698a17eafd84c848",
+      "timeseries_npz": "6bc821bef834df8c0d1fc0bf2cef0e60780b6d6fd26ca8aa32da3df718d88255"
+    },
+    "environment": {
+      "python": "3.12.4",
+      "numpy": "2.4.4",
+      "platform": "Windows-10-10.0.19045-SP0"
+    }
+  },
+  "repeat_statistics": {
+    "repeat_metrics_csv": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\repeat_metrics.csv",
+    "statistical_summary_csv": "C:\\Users\\firep\\OneDrive\\\ubc14\ud0d5 \ud654\uba74\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\statistical_summary.csv",
+    "ci95_method": "two-sided Student t; n=1 uses zero-width descriptive interval"
+  },
+  "elapsed_seconds": 92.90770079998765,
+  "notes": [
+    "Cityscapes access requires login at the official dataset site. If semantic_profile.applied is true, the run uses the measured substitute dataset profile; otherwise it uses paper Table III values.",
+    "No official AirTalking source code was found by title, DOI, or algorithm-name search during this reproduction.",
+    "Unspecified simulator constants are isolated under AssumedParams."
+  ]
+}

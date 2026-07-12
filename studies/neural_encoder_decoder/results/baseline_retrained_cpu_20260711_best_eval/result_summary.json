@@ -1,0 +1,64 @@
+{
+  "experiment": "cityscapes_rgb_to_semantic_encoder_decoder",
+  "device": "cpu",
+  "train_samples": 512,
+  "val_samples": 256,
+  "epochs": 0,
+  "image_size": {
+    "width": 128,
+    "height": 64
+  },
+  "model": {
+    "name": "paperlite",
+    "latent_channels": 20,
+    "width": 8,
+    "downsample_factor": 8,
+    "quantization_bits_assumed": 8,
+    "payload_ratio": 0.10416666666666667
+  },
+  "training": {
+    "class_balanced_loss": true,
+    "scheduler": "cosine",
+    "learning_rate": 0.001
+  },
+  "final_metrics": {
+    "epoch": 0,
+    "train_loss": null,
+    "val_loss": 1.5578396134078503,
+    "val_pixel_accuracy": 0.7576509118080139,
+    "val_mean_iou": 0.2237364649772644,
+    "valid_classes": 19,
+    "lr": 0.001
+  },
+  "best_metrics": {
+    "epoch": 17,
+    "train_loss": 0.9714787639677525,
+    "val_loss": 1.5578396134078503,
+    "val_pixel_accuracy": 0.7576509118080139,
+    "val_mean_iou": 0.2237364649772644,
+    "valid_classes": 19,
+    "lr": 0.0001017719010105253
+  },
+  "timing": {
+    "encode_ms_median": 1.8829499604180455,
+    "decode_ms_median": 2.7256000030320138,
+    "full_ms_median": 4.751099972054362
+  },
+  "paper_comparison": {
+    "paper_rho_c": 0.104,
+    "paper_rho_r": 3.0,
+    "rho_c_abs_error": 0.00016666666666667607,
+    "rho_c_rel_error_pct": 0.1602564102564193,
+    "paper_encoding_bitrate_mbps": 91.3,
+    "paper_decoding_bitrate_mbps": 23.23,
+    "measured_encode_input_throughput_mbps": 104.41488309989387,
+    "measured_decode_latent_throughput_mbps": 7.513941875997074,
+    "measured_decode_restoration_throughput_mbps": 22.541825627991223
+  },
+  "elapsed_seconds": 14.16008599998895,
+  "notes": [
+    "This is a real trainable neural encoder/decoder baseline, not the earlier label-resize proxy.",
+    "Payload ratio assumes 8-bit quantized latent features. Entropy coding is not implemented in this baseline.",
+    "CPU smoke runs are for pipeline validation; paper-grade metrics need longer training and preferably GPU."
+  ]
+}

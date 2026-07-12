@@ -1,0 +1,429 @@
+{
+  "schema_version": 2,
+  "status": "completed",
+  "started_at_utc": "2026-07-11T16:16:57.533145Z",
+  "completed_at_utc": "2026-07-11T16:20:14.548275Z",
+  "argv": [
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\.venv\\Scripts\\python.exe",
+    "studies\\adaptive_semantic_compression\\code\\run_full_adaptive_research.py",
+    "--metadata",
+    "studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\run_metadata.json",
+    "--neural-summary",
+    "studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+    "--neural-quality-mode",
+    "selection",
+    "--adaptive-threshold-rule",
+    "measured_ordered",
+    "--workers",
+    "6",
+    "--out",
+    "studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified"
+  ],
+  "command_windows": "\"C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\.venv\\Scripts\\python.exe\" studies\\adaptive_semantic_compression\\code\\run_full_adaptive_research.py --metadata studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\run_metadata.json --neural-summary studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json --neural-quality-mode selection --adaptive-threshold-rule measured_ordered --workers 6 --out studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified",
+  "environment": {
+    "argv": [
+      "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\.venv\\Scripts\\python.exe",
+      "studies\\adaptive_semantic_compression\\code\\run_full_adaptive_research.py",
+      "--metadata",
+      "studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\run_metadata.json",
+      "--neural-summary",
+      "studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+      "--neural-quality-mode",
+      "selection",
+      "--adaptive-threshold-rule",
+      "measured_ordered",
+      "--workers",
+      "6",
+      "--out",
+      "studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified"
+    ],
+    "command_windows": "\"C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\.venv\\Scripts\\python.exe\" studies\\adaptive_semantic_compression\\code\\run_full_adaptive_research.py --metadata studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\run_metadata.json --neural-summary studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json --neural-quality-mode selection --adaptive-threshold-rule measured_ordered --workers 6 --out studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified",
+    "python_version": "3.12.4",
+    "python_implementation": "CPython",
+    "numpy_version": "2.4.4",
+    "platform": "Windows-10-10.0.19045-SP0"
+  },
+  "runner_source": {
+    "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\code\\run_full_adaptive_research.py",
+    "sha256": "a7d94111da5c393bc2b141f5efaef6f1475be9dd93f68bbe3f46ff63bd11f153",
+    "snapshot_path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\runner_source_snapshot.py",
+    "snapshot_sha256": "a7d94111da5c393bc2b141f5efaef6f1475be9dd93f68bbe3f46ff63bd11f153"
+  },
+  "validator_source": {
+    "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\code\\validate_full_adaptive_results.py",
+    "sha256": "7360c3ea5515d95dc4cd057c95614d3061820956617d4b30c49f11a6d3ca796d",
+    "snapshot_path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\validator_source_snapshot.py",
+    "snapshot_sha256": "7360c3ea5515d95dc4cd057c95614d3061820956617d4b30c49f11a6d3ca796d"
+  },
+  "metadata_path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\run_metadata.json",
+  "result_validation": {
+    "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\result_validation.json",
+    "passed": true,
+    "schema_version": 2
+  },
+  "elapsed_seconds": 196.9964857000159,
+  "input_files": {
+    "metadata": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\run_metadata.json",
+      "exists": true,
+      "sha256": "ee55aa4b6910762fff4a086fb73670057deb498ecebb3be80cfe4ce2c34c0280",
+      "size_bytes": 9365
+    },
+    "quality": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\probe_outputs\\compression_quality.csv",
+      "exists": true,
+      "sha256": "3b1a532fb209f12afdcf9b877338766b5ccba443eddd9d4a52a2b907876da68d",
+      "size_bytes": 1408
+    },
+    "neural_summary": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+      "exists": true,
+      "sha256": "4e7ef21828e97075f4c8b5fdd51dd85a8f5427c6950c09915d5d13509fc67e08",
+      "size_bytes": 4197
+    }
+  },
+  "source_metadata": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\run_metadata.json",
+  "source_quality": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\probe_outputs\\compression_quality.csv",
+  "source_neural_encoder_decoder": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+  "neural_encoder_decoder_anchor": {
+    "schema_version": 2,
+    "source": "enhanced_scalable_cityscapes_codec_paper_inspired_follow_up",
+    "paper_like_active_channels": 80,
+    "rho_c_feature_uncompressed_mean": 0.10416666666666667,
+    "semantic_quality_miou_best": 0.3054155422121846,
+    "semantic_quality_miou_final": 0.3054155422121846,
+    "pixel_accuracy_best": 0.8286157743023543,
+    "feature_encode_bitrate_mbps_median": 420.0576872715057,
+    "feature_decode_bitrate_mbps_median": 81.59768834234389,
+    "timing": {
+      "encode_ms_median": 1.8721999949775636,
+      "decode_ms_median": 3.011850028997287
+    },
+    "multi_rate_profiles": [
+      {
+        "active_channels": 20,
+        "payload_ratio": 0.026041666666666668,
+        "payload_ratio_basis": "raw",
+        "mean_iou": 0.3048283091529904,
+        "psnr_db": 18.44779812881515,
+        "ssim": 0.5666523702144622
+      },
+      {
+        "active_channels": 40,
+        "payload_ratio": 0.052083333333333336,
+        "payload_ratio_basis": "raw",
+        "mean_iou": 0.30575056296782543,
+        "psnr_db": 18.473350510236855,
+        "ssim": 0.567121749162674
+      },
+      {
+        "active_channels": 60,
+        "payload_ratio": 0.078125,
+        "payload_ratio_basis": "raw",
+        "mean_iou": 0.30496858772315444,
+        "psnr_db": 18.466581035842268,
+        "ssim": 0.5674320878982544
+      },
+      {
+        "active_channels": 80,
+        "payload_ratio": 0.10416666666666667,
+        "payload_ratio_basis": "raw",
+        "mean_iou": 0.3054155422121846,
+        "psnr_db": 18.43495623228477,
+        "ssim": 0.5675060315132141
+      },
+      {
+        "active_channels": 120,
+        "payload_ratio": 0.15625,
+        "payload_ratio_basis": "raw",
+        "mean_iou": 0.306280000302737,
+        "psnr_db": 18.469343890416184,
+        "ssim": 0.5680320808887481
+      }
+    ],
+    "sanitized_for_run_metadata": true,
+    "nested_source_metadata_embedded": false
+  },
+  "neural_quality_mode": "selection",
+  "neural_quality_mode_semantics": "selection uses measured neural mIoU as the mode selection quality",
+  "neural_bitrate_application": {
+    "applied": true,
+    "encode_bitrate_mbps": 420.0576872715057,
+    "decode_bitrate_mbps": 81.59768834234389,
+    "encode_source_key": "feature_encode_bitrate_mbps_median",
+    "decode_source_key": "feature_decode_bitrate_mbps_median"
+  },
+  "adaptive_threshold_configuration": {
+    "requested_rule": "measured_ordered",
+    "resolved_rule": "measured_ordered",
+    "quality_source": "measured_multi_rate_neural_miou_ascending",
+    "sinr_bounds_db": [
+      -15.0,
+      -10.0,
+      -5.0,
+      0.0,
+      null
+    ],
+    "quality_thresholds": [
+      0.3048283091529904,
+      0.30496858772315444,
+      0.3054155422121846,
+      0.30575056296782543,
+      0.306280000302737
+    ],
+    "actual_thresholds": [
+      [
+        -15.0,
+        0.3048283091529904
+      ],
+      [
+        -10.0,
+        0.30496858772315444
+      ],
+      [
+        -5.0,
+        0.3054155422121846
+      ],
+      [
+        0.0,
+        0.30575056296782543
+      ],
+      [
+        null,
+        0.306280000302737
+      ]
+    ],
+    "null_means_unbounded": true,
+    "reachable_modes_across_configured_sinr_bins": [
+      "emergency",
+      "low",
+      "high"
+    ],
+    "reachable_mode_count": 3
+  },
+  "base_paper_params": {
+    "n_uav": 20,
+    "n_device": 20,
+    "dt": 1.0,
+    "t_slots": 1000,
+    "repeats": 10,
+    "vmax_uav": 23.0,
+    "accel_uav": 3.0,
+    "decel_uav": 2.0,
+    "height_mean": 20.0,
+    "carrier_bandwidth": 80000000.0,
+    "carrier_frequency": 5000000000.0,
+    "p_uav_tx": 0.2,
+    "p_device_tx": 0.1,
+    "noise_psd": 4e-21,
+    "noise_figure_db": 5.0,
+    "alpha_u2u": 2.2,
+    "alpha_u2g": 2.7,
+    "k_u2u_db": 10.0,
+    "rho_c": 0.10416666666666667,
+    "rho_r": 3.0,
+    "enc_bitrate": 420057687.2715057,
+    "dec_bitrate": 81597688.34234388
+  },
+  "base_assumed_params": {
+    "request_probability": 0.012,
+    "device_diffusion": 0.9,
+    "device_speed_cap": 1.4,
+    "workload_mean_bits": 140000000.0,
+    "workload_std_bits": 35000000.0,
+    "workload_min_bits": 60000000.0,
+    "workload_max_bits": 260000000.0,
+    "p_move": 130.0,
+    "p_hover": 115.0,
+    "p_encode": 0.9,
+    "p_decode": 0.9,
+    "p_d2d_radio": 0.2,
+    "energy_weight": 0.000111111,
+    "density_interference_scale": 12.0,
+    "linucb_alpha": 0.55,
+    "linucb_lambda": 1.0,
+    "linucb_candidate_samples": 10,
+    "sa_iterations": 2,
+    "sa_temperature": 3.0,
+    "sa_cooling": 0.9,
+    "mcts_samples": 80,
+    "random_semantic_encode_probability": 0.25,
+    "random_semantic_decode_probability": 0.5,
+    "seed": 260707
+  },
+  "source_reproduction_metadata_embedded": false,
+  "source_reproduction_metadata_note": "Only parsed parameter snapshots are embedded; nested source artifact paths are excluded.",
+  "profiles": {
+    "fixed_paper_like": {
+      "name": "fixed_paper_like",
+      "strategy": "fixed",
+      "modes": [
+        {
+          "name": "paper_like",
+          "rho_c": 0.10416666666666667,
+          "quality": 0.3054155422121846
+        }
+      ],
+      "target_thresholds": [
+        [
+          -15.0,
+          0.8
+        ],
+        [
+          -10.0,
+          0.88
+        ],
+        [
+          -5.0,
+          0.925
+        ],
+        [
+          0.0,
+          0.95
+        ],
+        [
+          null,
+          0.965
+        ]
+      ],
+      "null_means_unbounded": true,
+      "target_thresholds_semantics": "Each pair is [exclusive upper SINR bound in dB, required quality]; a null upper bound means the final interval is unbounded."
+    },
+    "adaptive_semantic": {
+      "name": "adaptive_semantic",
+      "strategy": "adaptive",
+      "modes": [
+        {
+          "name": "emergency",
+          "rho_c": 0.026041666666666668,
+          "quality": 0.3048283091529904
+        },
+        {
+          "name": "low",
+          "rho_c": 0.052083333333333336,
+          "quality": 0.30575056296782543
+        },
+        {
+          "name": "medium",
+          "rho_c": 0.078125,
+          "quality": 0.30496858772315444
+        },
+        {
+          "name": "paper_like",
+          "rho_c": 0.10416666666666667,
+          "quality": 0.3054155422121846
+        },
+        {
+          "name": "high",
+          "rho_c": 0.15625,
+          "quality": 0.306280000302737
+        }
+      ],
+      "target_thresholds": [
+        [
+          -15.0,
+          0.3048283091529904
+        ],
+        [
+          -10.0,
+          0.30496858772315444
+        ],
+        [
+          -5.0,
+          0.3054155422121846
+        ],
+        [
+          0.0,
+          0.30575056296782543
+        ],
+        [
+          null,
+          0.306280000302737
+        ]
+      ],
+      "null_means_unbounded": true,
+      "target_thresholds_semantics": "Each pair is [exclusive upper SINR bound in dB, required quality]; a null upper bound means the final interval is unbounded."
+    }
+  },
+  "areas": [
+    100,
+    200,
+    300,
+    400,
+    500
+  ],
+  "policies": [
+    "Stochastic",
+    "LinUCB",
+    "SA",
+    "Greedy",
+    "MCTS"
+  ],
+  "representative_area": 300,
+  "workers": 6,
+  "repeat_metrics_csv": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\repeat_metrics.csv",
+  "statistical_summary_csv": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\statistical_summary.csv",
+  "ci95_method": "two-sided Student t; n=1 uses zero-width descriptive interval",
+  "artifacts": {
+    "summary_metrics_csv": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\summary_metrics.csv",
+      "sha256": "c6c48fafbfa381ce30e5671b7cf8005d9a8d1f75323432deb2e49cfc2d439fb9",
+      "size_bytes": 14501
+    },
+    "repeat_metrics_csv": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\repeat_metrics.csv",
+      "sha256": "531ee22de634b8aea415a9031ebf0059d9ba5230879a44f06ed32f5ec45e7404",
+      "size_bytes": 143453
+    },
+    "statistical_summary_csv": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\statistical_summary.csv",
+      "sha256": "39206cd2c38d7a3af3a10ec94253fbd02de1ed381f8b97535188bc3f5754ac16",
+      "size_bytes": 92236
+    },
+    "compression_mode_usage_csv": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\compression_mode_usage.csv",
+      "sha256": "3ebebef293e71bb19f2d1cfdb29abfcdd3a0783092294dc20b2a2fc34fdb6e7f",
+      "size_bytes": 5098
+    },
+    "timeseries_and_sinr_samples_npz": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\timeseries_and_sinr_samples.npz",
+      "sha256": "61ff3f854e8a8378dc83b5b088da654ce61da8f8b05b958a4aaa81d8f3005064",
+      "size_bytes": 2884202
+    },
+    "adaptive_followup_research_report_md": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\adaptive_followup_research_report.md",
+      "sha256": "68ae057212d4b266310a58e1c6d15762993fcff8e93b46a166a552f2528d9723",
+      "size_bytes": 4512
+    },
+    "result_validation_json": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\result_validation.json",
+      "sha256": "b997596a1376062e8074616cc0a690e36d25b03e9fee99e2e3d1b67640a767a9",
+      "size_bytes": 8372
+    },
+    "runner_source_snapshot": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\runner_source_snapshot.py",
+      "sha256": "a7d94111da5c393bc2b141f5efaef6f1475be9dd93f68bbe3f46ff63bd11f153",
+      "size_bytes": 75405
+    },
+    "validator_source_snapshot": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\validator_source_snapshot.py",
+      "sha256": "7360c3ea5515d95dc4cd057c95614d3061820956617d4b30c49f11a6d3ca796d",
+      "size_bytes": 13851
+    },
+    "figure_finished_by_area_greedy_mcts.png": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\figures\\finished_by_area_greedy_mcts.png",
+      "sha256": "2ebf6ef5d68a5197b7d5dd003d4b7f15ac0a3f2e2aebc662def1ce4bef429bbf",
+      "size_bytes": 20681
+    },
+    "figure_latency_quality_tradeoff_300m.png": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\figures\\latency_quality_tradeoff_300m.png",
+      "sha256": "121f0e20d03e2ac38b436a74d3fd5211760e2f3b4c09801f14a71a4621bfc9c3",
+      "size_bytes": 22702
+    },
+    "figure_adaptive_mode_usage_300m.png": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\figures\\adaptive_mode_usage_300m.png",
+      "sha256": "018b416ec3416d2d56b6d6a516f6444850f6b2b5ac3cb0ea20bdd02bf5ea9d7d",
+      "size_bytes": 17074
+    }
+  }
+}

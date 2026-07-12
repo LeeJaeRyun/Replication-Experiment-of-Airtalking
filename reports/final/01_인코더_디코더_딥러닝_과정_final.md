@@ -1,0 +1,588 @@
+# 인코더·디코더 딥러닝 과정 상세 보고서
+
+> 작성 기준일: 2026-07-12  
+> 대상: 딥러닝을 처음 접하는 독자부터 재실행을 원하는 연구자까지  
+> 결론부터 말하면: 이 저장소의 기존 모델은 **실제로 학습한 의미 분할용 기준선**이지만, AirTalking 논문의 visual decoder를 정확히 재현한 모델은 아니다. 이번 강화 모델은 실제 8비트 전송, RGB 복원, 다중 압축률을 포함하도록 그 간극을 줄인 **논문 영감 후속 모델**이다.
+
+## 1. 이 보고서를 읽는 법
+
+서로 다른 사실을 섞지 않기 위해 다음 네 종류를 구분한다.
+
+- **논문 공개 사실**: `base/Airtalking_Aerial_D2D_for_Multi-UAV_Systems_Based_on_Semantic_Communication.pdf`에서 직접 확인되는 내용이다.
+- **기존 구현 사실**: `train_semantic_encoder_decoder.py`와 이미 저장된 JSON/CSV가 증명하는 내용이다.
+- **강화 구현 사실**: `train_enhanced_semantic_codec.py`에 명시적으로 구현된 내용이다.
+- **산출물 의존 결과**: 원본 템플릿의 `AUTO` 주석은 strict finalizer가 실제 JSON/CSV/provenance를 검사한 뒤 채우는 자리다. `reports/final`의 표와 문단은 이 검사를 통과한 산출물이다.
+
+따라서 “논문과 비슷하다”는 말은 “논문과 동일하다”는 뜻이 아니다. 특히 논문은 네트워크의 정확한 층 구성, latent 텐서 모양, 양자화 방법, 손실 함수, optimizer, epoch, 입력 크기, seed, 복원 품질을 공개하지 않았다.
+
+## 2. 가장 먼저 알아둘 용어
+
+- **딥러닝(deep learning)**: 예시 데이터와 정답을 반복해서 보여 주며, 많은 숫자 파라미터가 원하는 출력을 만들도록 자동 조정하는 방법이다.
+- **인코더(encoder)**: 큰 입력을 전송하기 좋은 작은 특징 표현으로 바꾸는 앞단이다. 이 작은 표현을 **latent(잠재 표현)** 또는 feature map이라고 부른다.
+- **디코더(decoder)**: 받은 latent만으로 사람이 보거나 후속 작업이 사용할 출력을 되살리는 뒷단이다.
+- **의미 통신(semantic communication)**: 모든 픽셀을 똑같이 보존하기보다, 도로·차량·보행자처럼 작업에 중요한 의미를 보존해 보내는 통신 방식이다.
+- **의미 분할(semantic segmentation)**: 이미지의 각 픽셀이 도로, 건물, 자동차 등 어느 클래스인지 맞히는 작업이다.
+- **코덱(codec)**: encoder와 decoder를 합친 말이다.
+- **양자화(quantization)**: 연속적인 실수를 제한된 정수 단계로 바꾸는 일이다. 여기서는 0~1 실수를 0~255의 8비트 정수로 바꾼다.
+- **손실 함수(loss)**: 모델 답이 정답에서 얼마나 벗어났는지 나타내는 학습용 점수다. 낮을수록 좋다.
+- **역전파(backpropagation)**: loss에 각 파라미터가 얼마나 책임이 있는지 미분으로 거꾸로 계산하는 절차다.
+- **optimizer**: 역전파로 얻은 기울기(어느 방향으로 바꿀지)를 실제 파라미터 갱신으로 바꾸는 규칙이다.
+- **epoch**: 학습 데이터 전체를 한 번 본 주기다.
+- **batch**: 메모리에 한꺼번에 넣어 계산하는 작은 데이터 묶음이다.
+- **checkpoint**: 중간 모델 가중치, optimizer 상태 등을 저장한 재시작 지점이다.
+
+## 3. 논문이 공개한 encoder/decoder와 공개하지 않은 것
+
+### 3.1 공개한 것
+
+논문 PDF 7쪽 성능평가 절은 다음의 큰 흐름을 공개한다.
+
+```text
+Cityscapes 이미지
+  -> 송신측 modified U-Net encoder
+  -> 고수준 의미 feature map 추출·압축·전송
+  -> 수신측 modified Pix2PixHD decoder
+  -> task-relevant visual content 복원
+```
+
+PDF 7쪽 Table II는 실행 장치를 다음과 같이 구분한다.
+
+| 역할 | 장치와 소프트웨어 | 논문 표기 모델 |
+|---|---|---|
+| Encoder | Jetson Orin Nano 8GB, Ubuntu 22.04, Python 3.10.12, PyTorch 2.4, CUDA 12.2, cuDNN 8.9 | modified U-Net |
+| Decoder | Jetson AGX Xavier 32GB, Ubuntu 20.04, Python 3.8.10, PyTorch 2.1, CUDA 11.8, cuDNN 8.6 | modified Pix2PixHD |
+
+PDF 5쪽 식 (22)는 의미 압축률을 다음처럼 정의한다.
+
+\[
+\rho_c = \frac{\text{encoded semantic payload length}}{\text{raw payload length}}
+\]
+
+쉽게 말하면 원본이 100바이트이고 전송 표현이 10바이트면 \(\rho_c=0.1\)이다. 작을수록 전송량은 적지만 의미 품질이 나빠질 수 있다. PDF 8쪽 Table III는 \(\rho_c=0.104\), \(\rho_r=3\), encoding 91.30 Mbps, decoding 23.23 Mbps를 보고한다.
+
+### 3.2 공개하지 않은 것
+
+다음은 논문에서 확인할 수 없었다.
+
+- modified U-Net/Pix2PixHD의 정확한 layer 목록과 채널 수
+- 전송되는 latent의 높이·너비·채널 수·자료형
+- 양자화 여부와 정수/실수 전송 규약
+- entropy coding 또는 파일 codec 사용 여부
+- 전체 loss와 각 항의 가중치
+- optimizer, learning rate, scheduler, epoch, batch size
+- 학습/검증 split과 샘플 수, 입력 resize/crop 크기
+- random seed와 데이터 증강
+- RGB 복원 품질(PSNR, SSIM 등)과 segmentation 품질(mIoU 등)
+- 학습 코드, 모델 가중치, raw 실험 로그
+- Table III의 \(\rho_r=3\)을 계산하는 정의식
+
+이 누락은 매우 중요하다. 동일한 데이터셋 이름과 “modified U-Net”이라는 이름만으로는 같은 모델을 만들 수 없다. 따라서 아래 강화 모델은 **exact reproduction(정확 복제)**이 아니라, 공개된 방향을 지키면서 누락된 설계를 독립적으로 명시한 후속 구현이다.
+
+## 4. 사용 데이터셋: Cityscapes
+
+### 4.1 무엇을 담은 데이터인가
+
+Cityscapes는 도시 도로 장면의 RGB 사진과 픽셀 단위 주석을 제공한다. 이 연구에서 입력은 `leftImg8bit` RGB 이미지이고, 정답은 `gtFine/*_gtFine_labelIds.png`다. 저장소의 실제 파일 수를 센 결과는 다음과 같다.
+
+| split | RGB 이미지 | `labelIds` | 이 연구에서의 역할 |
+|---|---:|---:|---|
+| train | 2,975 | 2,975 | 가중치 학습 |
+| val | 500 | 500 | 모델 선택과 최종 내부 평가 |
+| test | 1,525 | 1,525 파일 존재 | 사용하지 않음 |
+
+`gtFine` 폴더 전체 파일 수는 이미지당 color/instanceIds/labelIds/polygons 네 종류가 있어 train 11,900개, val 2,000개, test 6,100개다. 학습기는 그중 `labelIds`만 RGB 이미지와 짝지어 사용한다. Cityscapes 공식 test 정답은 공개 평가용으로 직접 쓰는 split이 아니므로 본 실험은 train/val만 사용한다.
+
+데이터 감사는 발견된 RGB·color·instanceIds·labelIds PNG 전부의 **헤더상 크기와 mode**, 모든 polygons JSON의 파싱·기본 schema, 모든 labelIds 픽셀을 전수 검사했다. 재현 fingerprint는 전체 inventory의 상대 경로·크기와 **모든 RGB 및 labelIds 파일의 content SHA-256**을 포함한다. 즉 모든 PNG의 전체 content를 hash한 것은 아니며, labelIds 외 PNG는 header 검사 범위다.
+
+### 4.2 19개 학습 클래스
+
+원본 label ID 중 다음 19개를 연속적인 train ID 0~18로 바꾼다.
+
+`road, sidewalk, building, wall, fence, pole, traffic light, traffic sign, vegetation, terrain, sky, person, rider, car, truck, bus, train, motorcycle, bicycle`
+
+그 밖의 픽셀은 `ignore_index=255`로 둔다. **ignore**는 “오답으로 벌점을 주지 않는 픽셀”이라는 뜻이다.
+
+### 4.3 전처리
+
+기존 기준선은 다음 순서였다.
+
+1. RGB는 bilinear 보간으로 128×64로 축소한다.
+2. label은 클래스 번호가 섞이지 않도록 nearest-neighbor로 128×64로 축소한다.
+3. RGB를 0~1로 바꾸고 ImageNet 평균 `[0.485, 0.456, 0.406]`, 표준편차 `[0.229, 0.224, 0.225]`로 정규화한다.
+4. 정렬된 파일 목록에서 등간격으로 train 512장, val 256장을 고른다.
+
+강화 모델은 RGB target을 그대로 복원해야 하므로 dataset 출력 RGB는 `[0,1]` 범위다. train에는 seed·epoch·sample index만으로 결정되는 paired augmentation을 쓴다. **paired**란 RGB와 label에 같은 crop/flip을 적용해 정답 위치가 어긋나지 않는다는 뜻이다.
+
+- random scale 후 crop
+- horizontal flip
+- RGB 밝기/색상 jitter
+- val은 무작위 변형 없이 deterministic resize
+
+이 결정적 설계 덕분에 Windows에서 DataLoader worker 수가 달라도 같은 seed·epoch·index의 변형을 다시 만들 수 있다.
+
+| 항목 | 기록값 |
+|---|---|
+| 데이터셋 | Cityscapes fine annotations, 19 trainId classes |
+| RGB root | C:\Users\firep\OneDrive\바탕 화면\Replication-Experiment-of-Airtalking\dataset\leftImg8bit_trainvaltest\leftImg8bit |
+| label root | C:\Users\firep\OneDrive\바탕 화면\Replication-Experiment-of-Airtalking\dataset\gtFine_trainvaltest\gtFine |
+| 발견한 train/val pair | 2,975 / 500 |
+| 실제 사용 train/val | 2,975 / 500 |
+| 입력 크기 | 256×128 |
+| 전체 데이터 사용 | True |
+| 증강 설정 | {"brightness_contrast_color_jitter": 0.15, "horizontal_flip_probability": 0.5, "paired_random_scale_crop_max": 1.25, "rng_key": "seed + epoch*1000003 + index*9973"} |
+| 검증 변환 | deterministic bilinear RGB resize and nearest-neighbor label resize |
+| 암호학적 fingerprint | 9c02129e4901ec77cb0e4ddc391f7c3484d4d5d2548a64af6539cd84048ab7de |
+
+`result_summary.json`에 기록된 경로·pair 수·사용 표본·변환 설정을 그대로 옮겼다. fingerprint 값도 함께 기록되어 파일 집합 동일성을 확인할 수 있다.
+
+위 표는 최종 run이 기록한 train/val 수, dataset fingerprint, content 재검증 여부, 입력 크기와 증강 범위를 `result_summary.json`에서 자동 반영한 결과다. 기본 강화 실행은 감사 manifest의 RGB·labelIds content hash를 다시 확인한다.
+
+## 5. 기존 기준선은 무엇을 학습했나
+
+### 5.1 데이터 흐름
+
+```text
+128×64 RGB
+  -> stride 2 convolution을 세 번 적용
+  -> 20×8×16 latent (실수 텐서)
+  -> bilinear upsampling + convolution
+  -> 19×64×128 class logits
+  -> 픽셀별 semantic label
+```
+
+**logit**은 아직 확률로 정규화하기 전의 클래스 점수다. 가장 큰 logit의 클래스를 예측으로 고른다.
+
+`paperlite`, width 8, latent channel 20 설정은 residual block을 포함하고 총 8배 downsampling을 한다. decoder 출력은 RGB 사진이 아니라 19-class segmentation map이다. 즉 논문의 modified Pix2PixHD가 수행한다고 적힌 **task-relevant visual content 복원**은 빠져 있다.
+
+### 5.2 기존 loss와 학습
+
+기존 loss는 class-balanced cross entropy다. **cross entropy**는 정답 클래스의 확률이 낮으면 큰 벌점을 주는 분류 loss다. 도로·건물처럼 흔한 픽셀만 잘 맞히는 문제를 줄이려고 클래스 빈도 \(f_c\)에서 다음 가중치를 만들었다.
+
+\[
+w_c \propto \frac{1}{\log(1.02+f_c)}
+\]
+
+한 batch의 계산은 다음과 같다.
+
+1. `optimizer.zero_grad()`로 이전 기울기를 지운다.
+2. encoder→decoder 순전파로 logits를 만든다.
+3. weighted cross entropy를 계산한다.
+4. `loss.backward()`로 역전파한다.
+5. AdamW optimizer가 파라미터를 갱신한다.
+6. cosine scheduler가 learning rate를 점차 줄인다.
+
+AdamW는 Adam의 적응적 학습률에 weight decay를 분리해 적용한 optimizer다. 기존 설정은 초기 learning rate 0.001, weight decay 0.0001, seed 260710이었다.
+
+### 5.3 기존 압축률의 실제 의미
+
+기존 코드는 latent를 실제 uint8로 바꾸지 않았다. 단지 “각 latent 값이 8비트라고 가정”해 다음 이론값을 계산했다.
+
+\[
+\rho_{c,legacy}
+=\frac{20\times(128/8)\times(64/8)\times8}
+{3\times128\times64\times8}
+=\frac{20}{3\times8^2}
+=0.1041667
+\]
+
+따라서 논문의 0.104와 가까운 것은 학습 결과가 아니라 **latent 채널 수와 stride를 그렇게 골랐기 때문**이다. 실제 float32 latent를 그대로 보낸다면 이 계산보다 네 배의 byte가 필요하다. entropy coding도 구현하지 않았다.
+
+### 5.4 기존 저장 결과
+
+`studies/neural_encoder_decoder/results/paperlike_timed_latent20/result_summary.json`에서 확인되는 값이다.
+
+| 항목 | 저장값 | 올바른 해석 |
+|---|---:|---|
+| train/val 표본 | 512 / 256 | 전체 Cityscapes가 아닌 부분집합 |
+| 입력 크기 | 128×64 | 원본보다 매우 낮은 해상도 |
+| best checkpoint 표기 | epoch 27 | README상 30-epoch 실행 중 timeout 후 복구 |
+| 평가 파일의 `epochs` | 0 | 재학습이 아니라 checkpoint 평가 명령 |
+| val pixel accuracy | 0.740795 | 픽셀 전체 정확도 |
+| val mIoU | 0.213473 | 19개 클래스 IoU의 평균 |
+| encode/decode/full median | 1.749 / 2.529 / 4.485 ms | 이 PC의 CPU, 1장, 128×64 측정 |
+| 계산상 \(\rho_c\) | 0.1041667 | 8비트 **가정**, 실제 양자화/직렬화 아님 |
+| 계산상 encoder 처리율 | 112.402 Mbps | raw RGB bit/로컬 encode time |
+| 계산상 decoder 처리율 | 24.297 Mbps | \(\rho_r=3\) proxy를 곱해 만든 값 |
+
+`training_history.csv`에는 checkpoint를 평가한 epoch 0 한 행만 있다. 따라서 저장된 artifact만으로는 1~30 epoch 전체 학습 곡선, epoch별 seed 상태, 마지막 epoch 상태를 독립적으로 감사할 수 없다.
+
+## 6. 강화 모델 설계
+
+### 6.1 목표
+
+강화 모델은 다음 다섯 가지를 동시에 해결한다.
+
+1. decoder가 latent만 받아 RGB와 segmentation을 모두 복원한다.
+2. 학습 순전파에도 8비트 양자화를 넣어 양자화 오차를 실제로 학습한다.
+3. 한 모델이 여러 압축률을 지원한다.
+4. 평가 때 실제 bytes 직렬화와 zlib round trip을 검증한다.
+5. seed, 환경, checkpoint, 원시 지표를 남겨 재현 가능성을 높인다.
+
+### 6.2 Encoder
+
+기본 encoder는 외부 다운로드 없이 실행되는 residual, modified-U-Net-inspired 구조다. convolution과 residual block으로 공간 크기를 총 16배 줄이고, 마지막 sigmoid로 최대 120채널 latent를 `[0,1]`에 묶는다. 선택적으로 torchvision ResNet-18 encoder를 쓸 수 있으나 pretrained weight는 외부 다운로드가 필요하므로 명시적 opt-in이다.
+
+“U-Net-inspired”라고 부르는 이유는 다중 해상도 특징 추출 아이디어를 따르기 때문이다. 그러나 전송 경계를 가로지르는 U-Net skip connection은 의도적으로 쓰지 않는다. skip을 쓰면 receiver가 latent 이외의 큰 encoder feature도 받아야 하므로 압축 통신이라는 실험 자체가 무너진다.
+
+### 6.3 실제 학습 경로의 8비트 양자화
+
+연속 latent \(z\in[0,1]\)를 다음처럼 바꾼다.
+
+\[
+q=\operatorname{round}(255z),\qquad \hat z=q/255
+\]
+
+round는 거의 모든 지점에서 미분값이 0이라 그대로는 학습이 어렵다. 그래서 **STE(straight-through estimator)**를 쓴다. 순전파는 \(\hat z\)를 사용하지만, 역전파 때는 round가 항등함수인 것처럼 기울기를 통과시킨다.
+
+```text
+forward: 실제 8비트 격자값 사용
+backward: d(quantized z)/dz ≈ 1로 근사
+```
+
+이는 “평가 때만 양자화”하는 방식보다 train-test 차이를 줄인다.
+
+### 6.4 Scalable prefix rate
+
+최대 latent는 120채널이고 앞쪽 채널만 활성화한다. 가능한 채널 수는 20, 40, 60, 80, 120이다. 비활성 채널은 decoder 입력에서 정확히 0이다. 총 stride가 16이고 값당 8비트이므로 raw RGB 대비 이론 비율은 다음과 같다.
+
+\[
+\rho_c(C)=\frac{C\times8}{3\times16^2\times8}=\frac{C}{768}
+\]
+
+| 활성 채널 C | 이론 \(\rho_c\) | 역할 |
+|---:|---:|---|
+| 20 | 0.0260417 | 매우 강한 압축 |
+| 40 | 0.0520833 | 낮은 rate |
+| 60 | 0.0781250 | 중간 rate |
+| 80 | 0.1041667 | 논문 Table III의 0.104 근처 operating point |
+| 120 | 0.1562500 | 높은 품질 우선 |
+
+**scalable**은 모델을 다섯 개 따로 저장하지 않고 한 latent의 prefix 길이로 rate를 바꿀 수 있다는 뜻이다.
+
+### 6.5 Decoder
+
+decoder는 Pix2PixHD-inspired residual bottleneck 뒤에 nearest-neighbor upsampling과 residual block을 네 번 적용한다. 출력 head는 두 개다.
+
+- RGB head: sigmoid를 거쳐 `[0,1]` RGB 복원
+- segmentation head: 19-class logits
+
+receiver 입력은 양자화된 latent뿐이다. 원본 RGB나 encoder skip feature를 몰래 참조하지 않는다. 이 제약은 “실제로 보낸 정보만으로 복원했는가?”를 보장한다.
+
+### 6.6 복합 loss
+
+강화 loss는 다음 네 항의 가중합이다.
+
+\[
+L=\lambda_{ce}L_{CE}+\lambda_{dice}L_{Dice}
++\lambda_{L1}L_{RGB,L1}+\lambda_{ssim}(1-SSIM)
+\]
+
+- **weighted CE**: 픽셀별 클래스를 맞힌다. 역빈도 클래스 가중치를 쓰되 지나치게 큰 값은 clip해 희귀 클래스가 학습을 불안정하게 만들지 않게 한다.
+- **soft Dice loss**: 예측 영역과 정답 영역의 겹침을 직접 높인다. 작은 객체·클래스 불균형에 CE를 보완한다.
+- **RGB L1 loss**: 복원 RGB와 원본 RGB의 픽셀 절대 차이 평균이다. L2보다 큰 outlier에 덜 민감하다.
+- **1-SSIM loss**: 밝기·대비·구조가 비슷한지를 본다. 이 저장소의 SSIM은 7×7 uniform window, zero padding, `C1=0.01²`, `C2=0.03²`를 쓰는 로컬 differentiable proxy다. Gaussian-window `torchmetrics`/`skimage` SSIM과 같은 구현이 아니다.
+
+loss 가중치는 CLI와 최종 metadata에 기록해야 한다. 논문이 이 가중치를 공개한 것은 아니므로, 이 조합은 독립 설계다.
+
+### 6.7 다중 rate 학습: sandwich 방식
+
+각 batch에서 encoder는 최대 120채널 quantized latent를 한 번 만든다. decoder는 다음 세 rate를 학습한다.
+
+1. 항상 최대 rate 120채널
+2. 항상 최소 rate 20채널
+3. seed 기반으로 고른 중간 rate(40·60·80채널) 하나
+
+세 loss를 평균해 한 번 역전파한다. 최대 성능과 가장 강한 압축 성능을 매 batch에서 보장하고, 중간 rate도 장기적으로 고르게 학습하는 **sandwich training**이다. rate sampler 상태까지 checkpoint에 저장해 resume 후 다음 선택 순서가 이어지도록 설계했다.
+
+### 6.8 Optimizer와 안정화 장치
+
+- optimizer: AdamW
+- scheduler: cosine learning-rate schedule
+- AMP: CUDA에서 mixed precision 사용 가능
+- gradient accumulation: 작은 GPU 메모리에서도 큰 유효 batch를 흉내 냄
+- gradient clipping: 기울기 폭주 방지
+- deterministic seed: Python, NumPy, PyTorch, CUDA, DataLoader generator 기록
+- complete resume: model, optimizer, scheduler, scaler, epoch, best score, 모든 RNG 상태 복원
+- 학습 중 best 보존: validation paper-like rate(80채널)의 mIoU 기준
+- 최종 결과 선택: 80채널 best 가중치와 마지막 epoch 가중치를 같은 다섯 rate에서 비교해 5-rate mIoU 평균이 큰 후보를 선택; 동률이면 최저-rate mIoU, 다시 동률이면 80채널 mIoU 사용
+
+**AMP(mixed precision)**는 일부 계산을 16비트로 해 속도와 메모리를 절약하는 방법이다. **gradient accumulation**은 여러 작은 batch의 기울기를 모아 한 번 갱신하는 방법이다.
+
+## 7. 전송 검증과 압축률 측정
+
+평가에서는 fake quantization 값만 보는 데서 끝나지 않는다. 각 샘플에 대해 다음을 수행한다.
+
+```text
+RGB -> encoder -> uint8 C×H×W
+    -> contiguous bytes serialize
+    -> zlib compress
+    -> zlib decompress
+    -> 원래 bytes와 byte-for-byte 동일성 확인
+    -> uint8 tensor deserialize
+    -> latent만 decoder에 입력
+```
+
+두 종류의 비율을 따로 보고한다.
+
+- `rho_uint8`: 고정 길이 uint8 latent bytes / raw uint8 RGB bytes
+- `rho_zlib`: zlib latent bytes / raw uint8 RGB bytes
+
+zlib은 **무손실 압축**이므로 압축을 풀면 latent byte가 정확히 같아야 한다. 단, 논문이 zlib 사용을 공개한 것은 아니다. 따라서 Table III 0.104와 일차 비교할 값은 정의가 명확한 고정 길이 `rho_uint8`이고, `rho_zlib`은 별도 후속 지표다.
+
+## 8. 평가 지표를 쉽게 이해하기
+
+### 8.1 Segmentation 지표
+
+- **pixel accuracy**: 유효 픽셀 중 맞힌 비율이다. 도로·하늘처럼 큰 클래스가 많으면 값이 높아 보일 수 있다.
+- **IoU(Intersection over Union)**: 한 클래스에서 예측과 정답이 겹친 영역을 둘의 합집합으로 나눈다.
+
+\[
+IoU_c=\frac{TP_c}{TP_c+FP_c+FN_c}
+\]
+
+- **mIoU**: 등장한 클래스들의 IoU 평균이다. 클래스별 균형을 더 잘 본다.
+- **per-class IoU**: car는 잘 되지만 rider는 실패하는 식의 차이를 숨기지 않는다.
+- **confusion matrix**: 실제 클래스 행과 예측 클래스 열의 개수를 기록한 표다.
+
+### 8.2 RGB 지표
+
+- **PSNR(dB)**: 평균제곱오차로 계산한 신호 품질이다. 같은 범위에서 높을수록 좋다.
+- **SSIM**: 밝기·대비·국소 구조의 유사도를 본다. 여기서는 위에 정의한 프로젝트 로컬 7×7 uniform-window proxy이며 일반적으로 1에 가까울수록 좋다.
+- **qualitative panel**: 원본 RGB, 복원 RGB, 정답 segmentation, 예측 segmentation을 나란히 보는 그림이다. 숫자가 숨기는 경계 붕괴나 색 번짐을 확인한다.
+
+### 8.3 통신·속도 지표
+
+- 실제 uint8 및 zlib payload byte
+- raw RGB 대비 payload ratio
+- encode/decode/full latency의 median·mean·min·max
+- timing batch size, device, 입력 크기
+
+CUDA timing은 비동기 실행 때문에 측정 전후 동기화가 필요하며 새 코드는 이를 포함한다. 이 timing은 neural encode/decode/full forward만 대상으로 하고 CPU↔GPU 전송, 직렬화, zlib 압축·해제 시간은 **측정·표시하지 않는다**. 따라서 zlib CPU latency나 end-to-end codec latency로 인용하면 안 된다. 논문 Table II의 Jetson 두 장치와 이 PC의 GPU/CPU는 다르므로 처리율 숫자가 비슷해도 같은 구현의 증거가 아니다.
+
+## 9. 재현 절차
+
+### 9.1 환경 확인
+
+저장소의 검증 환경 요구사항은 다음과 같다.
+
+```text
+numpy==2.4.4
+Pillow==12.2.0
+python-docx==1.2.0
+torch==2.12.1+cu126
+torchvision==0.27.1+cu126
+```
+
+이는 논문 Table II 환경과 동일하다는 뜻이 아니라, 이번 저장소 실행 환경을 고정하기 위한 값이다.
+
+```powershell
+.\.venv\Scripts\python.exe -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.version.cuda)"
+```
+
+| 항목 | 실행 기록 |
+|---|---|
+| UTC 시각 | 2026-07-11T15:35:24.411381+00:00 |
+| OS | Windows-10-10.0.19045-SP0 |
+| Python | 3.12.4 |
+| PyTorch / torchvision | 2.12.1+cu126 / 0.27.1+cu126 |
+| 장치 / GPU | cuda / NVIDIA GeForce RTX 4060 Ti |
+| CUDA / cuDNN | 12.6 / 91002 |
+| NumPy / Pillow | 2.4.4 / 12.2.0 |
+| git commit | 12b8dd602c76ce51ff721f2f3c29b9b49ac38846 |
+
+### 9.2 기존 기준선 재평가
+
+```powershell
+.\.venv\Scripts\python.exe studies\neural_encoder_decoder\code\train_semantic_encoder_decoder.py `
+  --out studies\neural_encoder_decoder\results\paperlike_timed_latent20_recheck `
+  --model paperlite --epochs 0 --train-limit 512 --val-limit 256 `
+  --image-width 128 --image-height 64 --batch-size 8 --width 8 `
+  --latent-channels 20 --class-balanced-loss --timing-runs 10 `
+  --eval-checkpoint studies\neural_encoder_decoder\results\paperlike_timed_latent20\best_semantic_encoder_decoder.pt
+```
+
+checkpoint는 크기가 커 `.gitignore` 대상일 수 있으므로 로컬 파일 존재 여부를 먼저 확인해야 한다. git에 없더라도 로컬 실험 artifact로는 유효하지만, strict 최종 보고서는 metadata가 가리키는 checkpoint가 실제 파일이어야 통과한다. 다른 장비에서 재현하려면 checkpoint와 hash를 별도로 보존·전달해야 한다.
+
+### 9.3 강화 모델 학습
+
+8GB급 CUDA 장치에서 권장하는 본 학습 명령은 다음과 같다. 생략한 loss·seed·active-channel 옵션은 코드 default가 `CE 1.0, Dice 0.5, RGB L1 1.0, RGB SSIM 0.25, seed 260711, channels 20,40,60,80,120`이며 최종 JSON에 다시 기록된다.
+
+```powershell
+.\.venv\Scripts\python.exe studies\neural_encoder_decoder\code\train_enhanced_semantic_codec.py `
+  --device cuda `
+  --epochs 40 `
+  --full-data `
+  --image-width 256 --image-height 128 `
+  --base-width 16 `
+  --batch-size 4 `
+  --gradient-accumulation 4 `
+  --num-workers 4 `
+  --out studies\neural_encoder_decoder\results\enhanced_scalable_256x128
+```
+
+CUDA out-of-memory가 나면 의미가 같은 유효 batch를 유지하도록 `--batch-size 1 --gradient-accumulation 16`으로 낮춘다. 코드는 OOM을 성공으로 기록하지 않고 exit code 2와 조정 안내를 출력한다.
+
+### 9.4 Resume와 평가
+
+중단된 run을 40 epoch 목표까지 이어 가는 예시는 다음과 같다.
+
+```powershell
+.\.venv\Scripts\python.exe studies\neural_encoder_decoder\code\train_enhanced_semantic_codec.py `
+  --device cuda --epochs 40 --full-data `
+  --image-width 256 --image-height 128 --base-width 16 `
+  --batch-size 4 --gradient-accumulation 4 --num-workers 4 `
+  --out studies\neural_encoder_decoder\results\enhanced_scalable_256x128 `
+  --resume studies\neural_encoder_decoder\results\enhanced_scalable_256x128\last_checkpoint.pt
+```
+
+별도 `eval-only` flag는 없다. 정상 종료 시 80채널 best checkpoint와 마지막 epoch checkpoint를 각각 다섯 rate에서 평가한 뒤 위의 mean-5-rate 기준으로 최종 표를 선택한다. 기계 검증용 최소 실행은 다음과 같다.
+
+```powershell
+.\.venv\Scripts\python.exe studies\neural_encoder_decoder\code\train_enhanced_semantic_codec.py --smoke --device cpu
+.\.venv\Scripts\python.exe studies\neural_encoder_decoder\code\train_enhanced_semantic_codec.py --smoke --device cuda
+```
+
+CPU smoke, CUDA AMP smoke, resume 경로와 회귀검사는 저장소의 현재 test discovery 결과로 확인한다. 테스트 수는 suite가 바뀔 때 달라지므로 문서에 고정하지 않는다. CPU smoke는 train 2장/val 1장, 64×32, 1 epoch의 **배관 검사**다. 실행 시간은 장치마다 달라지며, 그 mIoU·PSNR·SSIM은 비수렴 값이므로 모델 성능 결과로 인용하지 않는다.
+
+resume 검증은 “중단 없이 N epoch”와 “중간 checkpoint에서 이어 N epoch”의 결과가 허용 오차 안에서 같은지 확인해야 한다. 최소한 다음 파일을 보존한다.
+
+- `best_checkpoint.pt`
+- `last_checkpoint.pt`
+- `final_checkpoint.pt`
+- `training_history.csv`
+- `rate_quality.csv`
+- `rate_quality_best_80ch_checkpoint.csv`
+- `rate_quality_last_epoch_checkpoint.csv`
+- `per_class_iou_paper_like.csv`
+- `confusion_matrix_paper_like.csv`
+- `qualitative_panel_paper_like.png`
+- `result_summary.json`
+- `airtalking_semantic_summary.json`
+- `launch_manifest.json`
+- `training_source_snapshot.py`와 그 SHA-256
+
+`training_source_snapshot.py`는 실행 당시 학습 코드 자체를 결과 폴더에 복사하고, `launch_manifest.json`은 source hash·명령·환경·dataset fingerprint·시작/완료 상태와 최종 선택 후보를 기록한다. strict finalizer는 이름만 있는 경로나 현재 코드만 믿지 않고 이러한 snapshot/hash와 실제 artifact 파일을 함께 확인한다.
+
+## 10. 강화 결과 표: 학습 완료 후 자동 반영
+
+### 10.1 학습 상태
+
+| 항목 | 결과 |
+|---|---|
+| 실제 명령 | `studies\neural_encoder_decoder\code\train_enhanced_semantic_codec.py --device cuda --epochs 20 --full-data --image-width 256 --image-height 128 --base-width 16 --batch-size 4 --gradient-accumulation 4 --num-workers 4 --timing-runs 30 --qualitative-samples 8 --out studies\neural_encoder_decoder\results\enhanced_scalable_full_256x128_verified` |
+| best epoch | 19 |
+| train/val 표본 | 2,975 / 500 |
+| 총 학습 시간 | 1,628.9초 (0.45시간) |
+| 종료/중단 상태 | completed; epoch 20/20 (result_summary.json 기록) |
+
+### 10.2 Rate-quality 결과
+
+| 활성 채널 | 지점 | ρ uint8 | ρ zlib | mIoU | pixel acc. | PSNR(dB) | SSIM | 평가 표본 |
+|---|---|---|---|---|---|---|---|---|
+| 20 | rate_20 | 0.026042 | 0.025968 | 0.304828 | 0.828432 | 18.448 | 0.566652 | 500 |
+| 40 | rate_40 | 0.052083 | 0.050739 | 0.305751 | 0.829247 | 18.473 | 0.567122 | 500 |
+| 60 | rate_60 | 0.078125 | 0.075046 | 0.304969 | 0.828745 | 18.467 | 0.567432 | 500 |
+| 80 | paper_like | 0.104167 | 0.099276 | 0.305416 | 0.828616 | 18.435 | 0.567506 | 500 |
+| 120 | rate_120 | 0.156250 | 0.147679 | 0.306280 | 0.829142 | 18.469 | 0.568032 | 500 |
+
+위 표는 `rate_quality.csv`의 20/40/60/80/120채널별 `rho_uint8`, `rho_zlib`, mIoU, pixel accuracy, PSNR, SSIM을 보여 준다.
+
+### 10.3 Paper-like 80채널 요약
+
+| 항목 | 강화 80채널 | 재학습·CPU 재평가 기준선 |
+|---|---|---|
+| ρ uint8 / raw RGB | 0.1041667 | 0.1041667 |
+| ρ zlib / raw RGB | 0.0992756 | 미측정 |
+| mIoU | 0.305416 | 0.223736 |
+| pixel accuracy | 0.828616 | 0.757651 |
+| RGB PSNR | 18.435 | 미측정 |
+| RGB SSIM | 0.567506 | 미측정 |
+| 평가 표본 | 500 | 256 |
+
+이 표의 CPU 기준선 입력 디렉터리는 `baseline_retrained_cpu_20260711_best_eval`다. 작업 전 원래 저장 결과를 사용하는 04 비교 보고서와는 기준선 run이 다를 수 있다.
+
+ρ 값은 실제 직렬화된 uint8 latent byte를 raw uint8 RGB byte로 나눈 값이다. 기존 기준선의 ρ는 8비트 가정값이므로 측정 의미가 동일하지 않다. 또한 기존 기준선은 128×64, train/val 512/256 부분집합, segmentation-only 설정이고 강화 모델은 256×128, train/val 2,975/500 전체 분할, RGB+분할 이중 decoder이다. 따라서 mIoU 차이는 전체 시스템 강화의 결과이지, 모델 구조 하나만의 통제된 ablation 효과가 아니다. 논문 latent 규약이 비공개여서 0.104에 가깝다는 사실만으로 저자 codec 재현이라고 할 수 없다.
+
+논문값과 비교할 때는 다음 문장을 함께 유지해야 한다. “\(\rho_c\) 정의는 식 (22)와 맞췄으나, 논문 latent/양자화 규약이 비공개이므로 같은 codec이라고 단정할 수 없다.”
+
+### 10.4 속도와 자원
+
+| 항목 | 기록값 |
+|---|---|
+| 장치 | cuda / NVIDIA GeForce RTX 4060 Ti |
+| 입력 / timing batch | 256×128 / 1 |
+| timing 반복 / CUDA 동기화 | 30 / True |
+| encode median | 1.872 ms |
+| decode median | 3.012 ms |
+| full forward median | 4.998 ms |
+| 학습 가능 / 전체 parameter | 2,176,030 / 2,176,030 |
+| AMP 요청 / 실제 | True / True |
+| zlib 시간 포함 | 아니오 |
+
+장치명, CUDA/cuDNN, 입력 크기, timing batch size, warm-up 여부와 측정 반복 수를 함께 기록해야 속도 숫자를 해석할 수 있다. 현재 출력은 median·mean·min·max이며 임의의 percentile을 추가하지 않는다.
+
+### 10.5 학습 곡선과 정성 결과
+
+학습 이력에는 총 20개 epoch 행이 있다. 아래 표는 첫 epoch, 마지막 epoch, best epoch(중복 제외)를 보여 준다.
+
+| epoch | train loss | val loss | val mIoU | val pixel acc. | val PSNR | val SSIM | LR |
+|---|---|---|---|---|---|---|---|
+| 1 | 2.584879 | 2.317390 | 0.132469 | 0.626949 | 16.422 | 0.499376 | 0.00030000 |
+| 19 | 1.339927 | 1.477217 | 0.305416 | 0.828616 | 18.435 | 0.567506 | 0.00001319 |
+| 20 | 1.337729 | 1.479330 | 0.303374 | 0.826660 | 18.533 | 0.566445 | 0.00000781 |
+
+| 감사 항목 | 기록 |
+|---|---|
+| 정성 panel 표본 수 | 8 |
+| confusion matrix 총 유효 pixel | 14,256,808 |
+| confusion matrix 대각 비율 | 0.828616 |
+| panel 파일 | C:\Users\firep\OneDrive\바탕 화면\Replication-Experiment-of-Airtalking\studies\neural_encoder_decoder\results\enhanced_scalable_full_256x128_verified\qualitative_panel_paper_like.png |
+
+아래 panel은 입력 RGB, 복원 RGB, 정답/예측 segmentation의 정성 점검용이다. 작은 표본이므로 정량 지표를 대체하지 않는다.
+
+![강화 codec paper-like 정성 panel](../../studies/neural_encoder_decoder/results/enhanced_scalable_full_256x128_verified/qualitative_panel_paper_like.png)
+
+## 11. 기존 결과 신뢰성 감사
+
+| 질문 | 기존 기준선 판단 | 강화 모델에서의 조치 |
+|---|---|---|
+| 실제 신경망을 학습했나? | 예. RGB→latent→segmentation 모델과 checkpoint가 있다. | RGB+segmentation을 함께 학습한다. |
+| 논문 decoder를 재현했나? | 아니오. Pix2PixHD visual reconstruction이 없다. | Pix2PixHD-inspired decoder를 쓰되 정확 재현이라 부르지 않는다. |
+| 실제 8비트 전송을 학습했나? | 아니오. 8비트를 계산에 가정했다. | STE quantization이 train forward에 있다. |
+| 실제 byte round trip을 했나? | 아니오. | serialize→zlib→decompress→deserialize를 검증한다. |
+| \(\rho_c\)가 학습으로 0.104가 됐나? | 아니오. 채널 20/stride 8 선택으로 정해졌다. | 80/stride 16 operating point를 명시하고 실측 byte도 보고한다. |
+| RGB 복원 품질이 있나? | 아니오. | PSNR/SSIM/정성 panel을 보고한다. |
+| 전체 학습 이력이 있나? | 아니오. 저장 CSV는 평가 1행뿐이다. | epoch별 history와 complete resume state를 남기고, best-80과 last를 5-rate 평균으로 최종 비교한다. |
+| 논문 하드웨어와 공정 비교인가? | 아니오. 로컬 CPU와 Jetson이 다르다. | 장치별 결과를 분리하고 동등성 주장을 하지 않는다. |
+
+기존 mIoU 0.2135는 거짓 숫자는 아니지만, 낮은 해상도·부분집합·segmentation-only decoder에서 얻은 내부 val 결과다. 논문의 visual reconstruction 품질과 직접 비교할 수 없다. 기존 24.297 Mbps decoder 수치는 공개 정의가 없는 \(\rho_r=3\) proxy를 곱해 구성했으므로 “논문 decoder 성능 재현”의 증거로 쓰면 안 된다.
+
+## 12. 한계와 다음 실험
+
+1. 강화 모델도 논문 비공개 구조를 알아내지는 못한다.
+2. Cityscapes val은 모델 선택과 내부 평가에 쓰이므로, 반복 튜닝 뒤의 완전한 독립 test가 아니다.
+3. 한 codec의 prefix rate는 편리하지만 각 rate 전용 모델보다 불리할 수 있다.
+4. zlib 이득은 latent 통계에 따라 달라지며 논문의 codec과 무관할 수 있다.
+5. PSNR/SSIM이 높아도 작은 보행자·표지판 의미를 놓칠 수 있어 per-class IoU가 필요하다.
+6. mIoU가 높아도 실제 UAV task 성공률이 자동으로 높아지는 것은 아니다. 현재 독립 AirTalking simulator 연결 결과는 방향성만 보여 주며, 실제 UAV 환경 검증은 별도로 필요하다.
+7. 최종 성능 주장은 여러 seed의 평균·표준편차 또는 신뢰구간이 필요하다.
+
+권장 후속 ablation은 다음과 같다. **ablation**은 구성 요소 하나만 빼서 그 요소의 기여를 확인하는 실험이다.
+
+- 양자화 없음 vs 8비트 STE
+- segmentation loss만 vs RGB loss 포함
+- fixed 80채널 vs multi-rate sandwich
+- raw uint8 vs zlib 전송
+- residual encoder vs ResNet-18 encoder
+- pretrained 없음 vs pretrained 사용
+- 각 rate 전용 모델 vs scalable prefix 모델
+
+**상태: 미실행/증거 없음.** 다음 항목을 뒷받침하는 산출물이 없습니다: 강화 codec 인과적 ablation 결과 (요청된 optimizer/loss/pretraining/prefix-vs-rate별 모델을 한 요인씩 바꾼 별도 결과 파일이 없음; rate-quality 5점은 ablation이 아니라 한 scalable 모델의 operating point 평가임).
+
+## 13. 최종 요약
+
+- 논문은 Cityscapes, modified U-Net, modified Pix2PixHD, \(\rho_c=0.104\), 처리율과 장치만 공개했다.
+- 기존 구현은 실제 학습 모델이지만 segmentation-only이고 양자화가 계산상 가정이다.
+- 강화 구현은 latent-only receiver, RGB+segmentation decoder, 실제 8비트 학습 경로, byte round trip, 다중 rate, best-vs-last 5-rate 최종 선택과 source snapshot/hash provenance를 추가한다.
+- 강화 수치는 이제 기록됐지만, 기존 기준선과 학습 표본·해상도·decoder 목표가 모두 다르다. 따라서 시스템 전체 강화로만 표현하고, 구조 하나의 순수 효과로 단정하지 않는다.
+- 이 모델은 AirTalking의 비공개 codec을 복원한 것이 아니라 공개 정보에 맞춘 재현 가능한 후속 codec이다.

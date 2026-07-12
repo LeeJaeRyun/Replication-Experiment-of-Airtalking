@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "status": "completed",
+  "source_summary": {
+    "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\summary_metrics.csv",
+    "sha256": "4f87929abe015b10dd989cc05c0d5a3b4e10da1f71611f4f218b5a2a68b01787"
+  },
+  "row_count": 73,
+  "verdict_counts": {
+    "match": 17,
+    "partial": 17,
+    "mismatch": 39
+  },
+  "qualitative_row_count": 7,
+  "qualitative_verdict_counts": {
+    "match": 4,
+    "partial": 3,
+    "mismatch": 0
+  },
+  "thresholds": {
+    "match_max_relative_error": 0.25,
+    "partial_max_relative_error": 0.5
+  },
+  "artifacts": {
+    "verification_csv": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\verification_against_paper_enhanced_scalable_verified.csv",
+      "sha256": "c1539ee8ea3529243b37bdb7fbdf531f337fdd0a2b591a9e643d03a7a54090e7"
+    },
+    "verification_markdown": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\verification_against_paper_enhanced_scalable_verified.md",
+      "sha256": "eecdaaa2b473cfe4140fb85bbd13c78f04c231ff6bb97ac116653e13e89b4825"
+    }
+  },
+  "provenance": {
+    "finished_utc": "2026-07-11T15:43:32.999033+00:00",
+    "argv": [
+      "studies\\airtalking_reproduction\\code\\verify_against_paper.py",
+      "--summary",
+      "studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\summary_metrics.csv",
+      "--out-dir",
+      "studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified",
+      "--label",
+      "enhanced_scalable_verified"
+    ],
+    "command_windows": "studies\\airtalking_reproduction\\code\\verify_against_paper.py --summary studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\summary_metrics.csv --out-dir studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified --label enhanced_scalable_verified",
+    "python": "3.12.4",
+    "verifier_source": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\code\\verify_against_paper.py",
+    "verifier_source_sha256": "e1dcfb5c37b5a28215c1d42e486a5f4a33e57cf4c2d899730f91782633eae980"
+  }
+}

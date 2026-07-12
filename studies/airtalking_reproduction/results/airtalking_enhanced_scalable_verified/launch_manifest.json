@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "started_utc": "2026-07-11T15:39:45.224963+00:00",
+  "argv": [
+    "studies\\airtalking_reproduction\\code\\airtalking_reproduction.py",
+    "--semantic-summary",
+    "studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+    "--semantic-profile-kind",
+    "feature",
+    "--semantic-raw-basis",
+    "uncompressed",
+    "--semantic-encoder-mode",
+    "measured",
+    "--semantic-decoder-mode",
+    "measured",
+    "--assumed-metadata",
+    "studies\\airtalking_reproduction\\results\\airtalking_cityscapes_calibrated_final_p012\\run_metadata.json",
+    "--workers",
+    "6",
+    "--out",
+    "studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified"
+  ],
+  "command_windows": "studies\\airtalking_reproduction\\code\\airtalking_reproduction.py --semantic-summary studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json --semantic-profile-kind feature --semantic-raw-basis uncompressed --semantic-encoder-mode measured --semantic-decoder-mode measured --assumed-metadata studies\\airtalking_reproduction\\results\\airtalking_cityscapes_calibrated_final_p012\\run_metadata.json --workers 6 --out studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified",
+  "working_directory": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking",
+  "source": {
+    "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\code\\airtalking_reproduction.py",
+    "snapshot": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\simulation_source_snapshot.py",
+    "sha256": "6ad4392c9439e8a20a06b39b2767cd43cf33bd12cbf68551b034af4e5b144d73"
+  },
+  "inputs": {
+    "semantic_summary": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified\\airtalking_semantic_summary.json",
+      "sha256": "4e7ef21828e97075f4c8b5fdd51dd85a8f5427c6950c09915d5d13509fc67e08"
+    },
+    "assumed_metadata": {
+      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_cityscapes_calibrated_final_p012\\run_metadata.json",
+      "sha256": "d4227f47432b5604818075670207204a1489734fc9e7ba451494fd3cbf48295d"
+    }
+  },
+  "environment": {
+    "python": "3.12.4",
+    "numpy": "2.4.4",
+    "platform": "Windows-10-10.0.19045-SP0"
+  },
+  "finished_utc": "2026-07-11T15:41:19.025086+00:00",
+  "run_metadata": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified\\run_metadata.json",
+  "artifact_sha256": {
+    "summary_metrics_csv": "4f87929abe015b10dd989cc05c0d5a3b4e10da1f71611f4f218b5a2a68b01787",
+    "repeat_metrics_csv": "1a1da2676435b7465188d7ece81a4eefb9eaaee8de3713cc4a00ef1842d59709",
+    "statistical_summary_csv": "b2e4518f754c906d9671c498eb94a3f9cd64f9e7e18157fc698a17eafd84c848",
+    "timeseries_npz": "6bc821bef834df8c0d1fc0bf2cef0e60780b6d6fd26ca8aa32da3df718d88255"
+  }
+}

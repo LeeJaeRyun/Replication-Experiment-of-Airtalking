@@ -1,0 +1,108 @@
+{
+  "schema_version": 2,
+  "source": "enhanced_scalable_cityscapes_codec_paper_inspired_follow_up",
+  "scientific_scope": {
+    "classification": "paper-inspired independently specified follow-up experiment",
+    "paper_disclosed_outline": "RGB to modified U-Net semantic representation, compressed/transmitted representation, modified Pix2PixHD visual reconstruction",
+    "undisclosed_by_paper": "exact tensor layout, neural weights, losses, optimizer schedule, augmentations, and training recipe",
+    "claim_not_made": "This is not the paper authors' exact encoder/decoder reproduction."
+  },
+  "paper_like_active_channels": 80,
+  "rho_c_feature_uncompressed_mean": 0.10416666666666667,
+  "rho_c_feature_zlib_mean": 0.099275634765625,
+  "rho_c_uncompressed_mean": 0.099275634765625,
+  "rho_c_zlib_mean": 0.099275634765625,
+  "png_denominator_fields_omitted": true,
+  "png_denominator_fields_note": "Input PNG byte sizes were not measured; PNG-ratio aliases are intentionally absent.",
+  "transport_encoding": "contiguous_uint8_latent; optional zlib level recorded in result_summary",
+  "rho_r_proxy": 3.0,
+  "semantic_quality_miou_best": 0.3054155422121846,
+  "semantic_quality_miou_final": 0.3054155422121846,
+  "pixel_accuracy_best": 0.8286157743023543,
+  "pixel_accuracy_final": 0.8286157743023543,
+  "rgb_reconstruction_psnr_db": 18.43495623228477,
+  "rgb_reconstruction_ssim": 0.5675060315132141,
+  "feature_encode_bitrate_mbps_median": 420.0576872715057,
+  "feature_decode_bitrate_mbps_median": 81.59768834234389,
+  "feature_bitrate_contract": "encode=raw_RGB_bits/encoder_time; decode=latent_uint8_bits*rho_r_proxy/decoder_time",
+  "zlib_bitrate_fields_omitted": true,
+  "zlib_bitrate_fields_note": "GPU timing excludes D2H/H2D, serialization, zlib compression, and decompression.",
+  "num_samples": 500,
+  "multi_rate_profiles": [
+    {
+      "active_channels": 20,
+      "operating_point": "rate_20",
+      "rho_uint8": 0.026041666666666668,
+      "rho_zlib": 0.025967508951822916,
+      "mean_iou": 0.3048283091529904,
+      "pixel_accuracy": 0.8284317218833276,
+      "psnr_db": 18.44779812881515,
+      "ssim": 0.5666523702144622
+    },
+    {
+      "active_channels": 40,
+      "operating_point": "rate_40",
+      "rho_uint8": 0.052083333333333336,
+      "rho_zlib": 0.050739176432291665,
+      "mean_iou": 0.30575056296782543,
+      "pixel_accuracy": 0.8292469815122712,
+      "psnr_db": 18.473350510236855,
+      "ssim": 0.567121749162674
+    },
+    {
+      "active_channels": 60,
+      "operating_point": "rate_60",
+      "rho_uint8": 0.078125,
+      "rho_zlib": 0.07504648844401042,
+      "mean_iou": 0.30496858772315444,
+      "pixel_accuracy": 0.8287445548821307,
+      "psnr_db": 18.466581035842268,
+      "ssim": 0.5674320878982544
+    },
+    {
+      "active_channels": 80,
+      "operating_point": "paper_like",
+      "rho_uint8": 0.10416666666666667,
+      "rho_zlib": 0.099275634765625,
+      "mean_iou": 0.3054155422121846,
+      "pixel_accuracy": 0.8286157743023543,
+      "psnr_db": 18.43495623228477,
+      "ssim": 0.5675060315132141
+    },
+    {
+      "active_channels": 120,
+      "operating_point": "rate_120",
+      "rho_uint8": 0.15625,
+      "rho_zlib": 0.14767915852864583,
+      "mean_iou": 0.306280000302737,
+      "pixel_accuracy": 0.8291420491880089,
+      "psnr_db": 18.469343890416184,
+      "ssim": 0.5680320808887481
+    }
+  ],
+  "timing": {
+    "active_channels": 80,
+    "runs": 30,
+    "batch_size": 1,
+    "cuda_synchronized": true,
+    "encode_including_8bit_fake_quantization": {
+      "median_ms": 1.8721999949775636,
+      "mean_ms": 2.6756666717119515,
+      "min_ms": 1.3853000127710402,
+      "max_ms": 19.767199992202222
+    },
+    "decode_from_latent_only": {
+      "median_ms": 3.011850028997287,
+      "mean_ms": 4.128080004981409,
+      "min_ms": 2.181100018788129,
+      "max_ms": 37.09450003225356
+    },
+    "full_forward": {
+      "median_ms": 4.997999989427626,
+      "mean_ms": 6.730623327894136,
+      "min_ms": 3.9402999682351947,
+      "max_ms": 56.854099966585636
+    },
+    "excludes_cpu_zlib_transport": true
+  }
+}

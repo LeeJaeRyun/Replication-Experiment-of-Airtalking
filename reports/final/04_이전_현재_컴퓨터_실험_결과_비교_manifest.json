@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "report_kind": "previous-vs-current-computer-and-experiment-comparison",
+  "comparison_date_kst": "2026-07-12",
+  "previous_hardware_record": {
+    "execution_device": "cpu",
+    "cpu_model": null,
+    "cpu_cores": null,
+    "ram_gib": null,
+    "gpu_model": null,
+    "os": null,
+    "interpretation": "The previous result artifacts record only device=cpu; detailed hardware was not preserved and is not inferred."
+  },
+  "current_hardware_snapshot": {
+    "source": "Windows WMI and nvidia-smi live query on 2026-07-12 KST; GPU name is also recorded in the verified result summary",
+    "cpu_model": "AMD Ryzen 5 7500F 6-Core Processor",
+    "cpu_cores": 6,
+    "cpu_logical_processors": 12,
+    "ram_gib": 31.74,
+    "gpu_model": "NVIDIA GeForce RTX 4060 Ti",
+    "gpu_memory_mib": 8188,
+    "nvidia_driver": "560.94",
+    "os": "Microsoft Windows 10 Home 64-bit",
+    "os_version": "10.0.19045"
+  },
+  "input_artifacts": [
+    {
+      "path": "studies/neural_encoder_decoder/results/paperlike_timed_latent20/result_summary.json",
+      "sha256": "c6a7b1367b18dd16aae15f0907dfdfd569a6d5c6d81cb5b334814dfe35ce25f8"
+    },
+    {
+      "path": "studies/neural_encoder_decoder/results/paperlike_timed_latent20/airtalking_semantic_summary.json",
+      "sha256": "e55ea13d69dc375f58fb2716a2680fa3ccf67945b4a9326730bf952b34827a7d"
+    },
+    {
+      "path": "studies/neural_encoder_decoder/results/enhanced_scalable_full_256x128_verified/result_summary.json",
+      "sha256": "83b6f3f518436f7952ba1f03e5ec85931e834477c262e168de1f903fbe53a295"
+    },
+    {
+      "path": "studies/neural_encoder_decoder/results/enhanced_scalable_full_256x128_verified/airtalking_semantic_summary.json",
+      "sha256": "4e7ef21828e97075f4c8b5fdd51dd85a8f5427c6950c09915d5d13509fc67e08"
+    }
+  ],
+  "converter_source": {
+    "path": "tools/finalize_research_reports.py",
+    "sha256": "b453bd37b226e8ec02190ea7998dbf85029772779ffbe5fb58d0078d732455e9",
+    "function": "markdown_to_docx"
+  },
+  "output_artifacts": {
+    "markdown": {
+      "path": "reports/final/04_이전_현재_컴퓨터_실험_결과_비교_final.md",
+      "sha256": "ce944d30052b06691941125a824362b148d5fc8ec16cda69f969c7856ca6b161",
+      "size_bytes": 17439
+    },
+    "docx": {
+      "path": "reports/final/04_이전_현재_컴퓨터_실험_결과_비교_final.docx",
+      "sha256": "5e5c4cc9538aa488d389daaa038b3fba4b0ec046fa3c9966d2dec1b4d19f2e13",
+      "size_bytes": 764849
+    }
+  },
+  "warnings": [
+    "The previous computer's detailed hardware specifications were not recorded, so hardware-only speedup and training-time ratios cannot be calculated.",
+    "The previous and current experiments differ in dataset size, resolution, model architecture, output tasks, quantization, and checkpoint selection; quality changes are system-level, not a controlled hardware-only effect."
+  ]
+}

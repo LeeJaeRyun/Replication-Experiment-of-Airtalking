@@ -1,0 +1,311 @@
+{
+  "schema_version": 2,
+  "source_summary": {
+    "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\summary_metrics.csv",
+    "sha256": "c6c48fafbfa381ce30e5671b7cf8005d9a8d1f75323432deb2e49cfc2d439fb9"
+  },
+  "passed": true,
+  "row_count": 75,
+  "expected_row_count": 75,
+  "expected_combinations": {
+    "modes": [
+      "nonsemantic",
+      "fixed_paper_like",
+      "adaptive_semantic"
+    ],
+    "areas": [
+      100,
+      200,
+      300,
+      400,
+      500
+    ],
+    "policies": [
+      "Stochastic",
+      "LinUCB",
+      "SA",
+      "Greedy",
+      "MCTS"
+    ],
+    "count": 75
+  },
+  "schema": {
+    "required_columns": [
+      "mode",
+      "area",
+      "policy",
+      "finished",
+      "avg_time",
+      "semantic_quality"
+    ],
+    "key_columns": [
+      "mode",
+      "area",
+      "policy"
+    ],
+    "numeric_columns": [
+      "area",
+      "finished",
+      "avg_time",
+      "semantic_quality"
+    ],
+    "canonical_key": [
+      "mode",
+      "integer(area)",
+      "policy"
+    ]
+  },
+  "expected_schema": {
+    "required_columns": [
+      "mode",
+      "area",
+      "policy",
+      "finished",
+      "avg_time",
+      "semantic_quality"
+    ],
+    "key_columns": [
+      "mode",
+      "area",
+      "policy"
+    ],
+    "numeric_columns": [
+      "area",
+      "finished",
+      "avg_time",
+      "semantic_quality"
+    ],
+    "canonical_key": [
+      "mode",
+      "integer(area)",
+      "policy"
+    ]
+  },
+  "missing_combinations": [],
+  "missing": {
+    "combinations": [],
+    "values": [],
+    "required_columns": []
+  },
+  "extra_combinations": [],
+  "duplicates": [],
+  "duplicate_combinations": [],
+  "missing_values": [],
+  "invalid_canonical_keys": [],
+  "invalid_numeric_values": [],
+  "nonfinite_values": [],
+  "nonfinite": [],
+  "zero_denominators": [],
+  "zero_denominator": [],
+  "errors": [],
+  "adaptive_vs_fixed": {
+    "evaluated": true,
+    "reason": null,
+    "all_comparisons_pass": false,
+    "all_finished_ge_fixed": false,
+    "all_avg_time_le_fixed": false,
+    "max_quality_drop": -0.03174846059133052,
+    "comparisons": [
+      {
+        "area": 100,
+        "policy": "Stochastic",
+        "finished_delta_pct": 12.380952380952376,
+        "avg_time_delta_pct": -13.42961021534049,
+        "quality_delta": -0.02107548364843803,
+        "pass": true
+      },
+      {
+        "area": 100,
+        "policy": "LinUCB",
+        "finished_delta_pct": 109.0352220520674,
+        "avg_time_delta_pct": -48.875673345786694,
+        "quality_delta": 0.010455910594984075,
+        "pass": true
+      },
+      {
+        "area": 100,
+        "policy": "SA",
+        "finished_delta_pct": 28.73303167420813,
+        "avg_time_delta_pct": -28.673006651820415,
+        "quality_delta": 0.004844626004573027,
+        "pass": true
+      },
+      {
+        "area": 100,
+        "policy": "Greedy",
+        "finished_delta_pct": 63.39869281045751,
+        "avg_time_delta_pct": -77.51850689344735,
+        "quality_delta": 0.03228268737932616,
+        "pass": true
+      },
+      {
+        "area": 100,
+        "policy": "MCTS",
+        "finished_delta_pct": 53.430185633575455,
+        "avg_time_delta_pct": -63.935004920336446,
+        "quality_delta": 0.047022463258370895,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "Stochastic",
+        "finished_delta_pct": 13.924050632911397,
+        "avg_time_delta_pct": -24.302320093635096,
+        "quality_delta": -0.03174846059133052,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "LinUCB",
+        "finished_delta_pct": 31.46443514644351,
+        "avg_time_delta_pct": -39.34547882039986,
+        "quality_delta": 0.03377158162489441,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "SA",
+        "finished_delta_pct": 13.20987654320988,
+        "avg_time_delta_pct": -16.294555328098294,
+        "quality_delta": -0.02753664297594305,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "Greedy",
+        "finished_delta_pct": 17.8735632183908,
+        "avg_time_delta_pct": -50.777633400239864,
+        "quality_delta": 0.013875399717987569,
+        "pass": true
+      },
+      {
+        "area": 200,
+        "policy": "MCTS",
+        "finished_delta_pct": 21.89119170984455,
+        "avg_time_delta_pct": -45.30248592005312,
+        "quality_delta": 0.05810233483283245,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "Stochastic",
+        "finished_delta_pct": 10.803324099722987,
+        "avg_time_delta_pct": -12.960304570818654,
+        "quality_delta": -0.010967201123408321,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "LinUCB",
+        "finished_delta_pct": 8.026030368763552,
+        "avg_time_delta_pct": -19.319715144183807,
+        "quality_delta": 0.007816393465946536,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "SA",
+        "finished_delta_pct": 8.374875373878371,
+        "avg_time_delta_pct": -17.002036075595093,
+        "quality_delta": -0.0059750213529708995,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "Greedy",
+        "finished_delta_pct": 10.435238594651288,
+        "avg_time_delta_pct": -40.398704613110155,
+        "quality_delta": 0.015387403720584891,
+        "pass": true
+      },
+      {
+        "area": 300,
+        "policy": "MCTS",
+        "finished_delta_pct": 11.982968369829676,
+        "avg_time_delta_pct": -31.820304289014707,
+        "quality_delta": 0.04329484008229423,
+        "pass": true
+      },
+      {
+        "area": 400,
+        "policy": "Stochastic",
+        "finished_delta_pct": -2.755453501722149,
+        "avg_time_delta_pct": 2.9098277942468123,
+        "quality_delta": 0.020940977119390025,
+        "pass": false
+      },
+      {
+        "area": 400,
+        "policy": "LinUCB",
+        "finished_delta_pct": 11.251980982567355,
+        "avg_time_delta_pct": -18.692025323473278,
+        "quality_delta": -0.006433420480933871,
+        "pass": true
+      },
+      {
+        "area": 400,
+        "policy": "SA",
+        "finished_delta_pct": 3.4547152194211046,
+        "avg_time_delta_pct": -8.433485215643804,
+        "quality_delta": 0.008670377629778514,
+        "pass": true
+      },
+      {
+        "area": 400,
+        "policy": "Greedy",
+        "finished_delta_pct": 14.416846652267829,
+        "avg_time_delta_pct": -30.059271106663054,
+        "quality_delta": 0.006819034797464596,
+        "pass": true
+      },
+      {
+        "area": 400,
+        "policy": "MCTS",
+        "finished_delta_pct": 6.116207951070336,
+        "avg_time_delta_pct": -20.757271936310634,
+        "quality_delta": 0.029733888504125727,
+        "pass": true
+      },
+      {
+        "area": 500,
+        "policy": "Stochastic",
+        "finished_delta_pct": -0.5675368898978435,
+        "avg_time_delta_pct": 1.0417890450869112,
+        "quality_delta": 0.014261382118487154,
+        "pass": false
+      },
+      {
+        "area": 500,
+        "policy": "LinUCB",
+        "finished_delta_pct": 5.295471987720627,
+        "avg_time_delta_pct": -20.58952539218735,
+        "quality_delta": -0.013293284015533202,
+        "pass": true
+      },
+      {
+        "area": 500,
+        "policy": "SA",
+        "finished_delta_pct": 0.559179869524705,
+        "avg_time_delta_pct": -4.114500067527759,
+        "quality_delta": -0.022944788242441727,
+        "pass": true
+      },
+      {
+        "area": 500,
+        "policy": "Greedy",
+        "finished_delta_pct": 6.73175745118191,
+        "avg_time_delta_pct": -16.823305414295344,
+        "quality_delta": 0.004183698784964496,
+        "pass": true
+      },
+      {
+        "area": 500,
+        "policy": "MCTS",
+        "finished_delta_pct": 10.031545741324924,
+        "avg_time_delta_pct": -19.82095284839442,
+        "quality_delta": 0.021995989098412605,
+        "pass": true
+      }
+    ]
+  }
+}

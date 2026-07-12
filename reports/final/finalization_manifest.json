@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "mode": "strict",
+  "auto_template_key_count": 33,
+  "auto_remaining_in_final_markdown": 0,
+  "markdown": [
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\01_인코더_디코더_딥러닝_과정_final.md",
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\02_AirTalking_논문_실험_재현_final.md",
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\03_후속연구_적응형_의미압축_final.md"
+  ],
+  "docx": [
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\01_인코더_디코더_딥러닝_과정_final.docx",
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\02_AirTalking_논문_실험_재현_final.docx",
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\03_후속연구_적응형_의미압축_final.docx"
+  ],
+  "artifacts": {
+    "markdown": [
+      {
+        "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\01_인코더_디코더_딥러닝_과정_final.md",
+        "sha256": "89d27d93c1ac5582ed2c6ef13a2e5f7f3bcb371697ca47bde600144b2f8c51ff",
+        "size_bytes": 36070
+      },
+      {
+        "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\02_AirTalking_논문_실험_재현_final.md",
+        "sha256": "79c1e364107f746101ab4436cdf4765c3a07ad3844b63eaadc41ac7770a7d2e5",
+        "size_bytes": 33421
+      },
+      {
+        "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\03_후속연구_적응형_의미압축_final.md",
+        "sha256": "b1153b5eb1e566bb0fe6204f341c4d1407afc41b8b3aa80b598abb261924764b",
+        "size_bytes": 43985
+      }
+    ],
+    "docx": [
+      {
+        "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\01_인코더_디코더_딥러닝_과정_final.docx",
+        "sha256": "0cccae2defe90678b403385183d085cbe6a2cb3535284cc867e755601d0c57bc",
+        "size_bytes": 774219
+      },
+      {
+        "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\02_AirTalking_논문_실험_재현_final.docx",
+        "sha256": "7626d4b6a6bec52b36b8cd1ab749866da8b209584eebaa1706bc655318d4747d",
+        "size_bytes": 155421
+      },
+      {
+        "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\final\\03_후속연구_적응형_의미압축_final.docx",
+        "sha256": "47a0b11f9b22f763ad7d751846e202be710251c88e5736f7f946e9a0b5f536f4",
+        "size_bytes": 113153
+      }
+    ]
+  },
+  "finalizer_source": {
+    "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\tools\\finalize_research_reports.py",
+    "sha256": "b453bd37b226e8ec02190ea7998dbf85029772779ffbe5fb58d0078d732455e9"
+  },
+  "input_directories": {
+    "enhanced": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\neural_encoder_decoder\\results\\enhanced_scalable_full_256x128_verified",
+    "reproduction": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\airtalking_reproduction\\results\\airtalking_enhanced_scalable_verified",
+    "adaptive": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified",
+    "baseline_neural": "studies\\neural_encoder_decoder\\results\\baseline_retrained_cpu_20260711_best_eval",
+    "baseline_reproduction": "studies\\airtalking_reproduction\\results\\airtalking_cityscapes_calibrated_final_p012",
+    "baseline_adaptive": "studies\\adaptive_semantic_compression\\results\\full_adaptive_results"
+  },
+  "warnings": [],
+  "templates_preserved": [
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\01_인코더_디코더_딥러닝_과정.md",
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\02_AirTalking_논문_실험_재현.md",
+    "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\reports\\03_후속연구_적응형_의미압축.md"
+  ]
+}

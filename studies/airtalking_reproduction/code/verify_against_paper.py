@@ -2,6 +2,13 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
+import json
+import math
+import platform
+import subprocess
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -41,12 +48,24 @@ PAPER_FIG6_FINISHED = {
 def load_actual(summary_path: Path) -> dict[tuple[str, int, str], dict[str, float]]:
     out: dict[tuple[str, int, str], dict[str, float]] = {}
     with summary_path.open(newline="", encoding="utf-8") as fh:
-        for row in csv.DictReader(fh):
-            out[(row["mode"], int(row["area"]), row["policy"])] = {
+        reader = csv.DictReader(fh)
+        required = {"mode", "area", "policy", "finished", "avg_time", "flight_energy_per_req"}
+        missing_columns = sorted(required - set(reader.fieldnames or []))
+        if missing_columns:
+            raise ValueError(f"Summary is missing required columns: {missing_columns}")
+        for line_number, row in enumerate(reader, start=2):
+            key = (str(row["mode"]).strip(), int(float(row["area"])), str(row["policy"]).strip())
+            if key in out:
+                raise ValueError(f"Duplicate summary key at line {line_number}: {key}")
+            values = {
                 key: float(value)
                 for key, value in row.items()
                 if key not in {"mode", "area", "policy"} and value != ""
             }
+            nonfinite = [name for name, value in values.items() if not math.isfinite(value)]
+            if nonfinite:
+                raise ValueError(f"Non-finite summary values at line {line_number}: {nonfinite}")
+            out[key] = values
     return out
 
 
@@ -65,6 +84,20 @@ def compare_rows(actual: dict[tuple[str, int, str], dict[str, float]]) -> list[d
         ("Figure 4 avg_time", "semantic", "avg_time", PAPER_AVG_TIME),
         ("Figure 3 flight_energy", "semantic", "flight_energy_per_req", PAPER_FLIGHT_ENERGY),
     ]
+    missing_requirements: list[str] = []
+    for _, mode, metric, expected_by_area in checks:
+        for area, expected_by_policy in expected_by_area.items():
+            for policy in expected_by_policy:
+                key = (mode, area, policy)
+                if key not in actual or metric not in actual[key]:
+                    missing_requirements.append(f"{key}:{metric}")
+    for mode, expected_by_policy in PAPER_FIG6_FINISHED.items():
+        for policy in expected_by_policy:
+            key = (mode, 300, policy)
+            if key not in actual or "finished" not in actual[key]:
+                missing_requirements.append(f"{key}:finished")
+    if missing_requirements:
+        raise ValueError(f"Summary cannot support paper verification; missing {missing_requirements[:10]}")
     for check_name, mode, metric, expected_by_area in checks:
         for area, expected_by_policy in expected_by_area.items():
             for policy, expected in expected_by_policy.items():
@@ -149,9 +182,28 @@ def qualitative_checks(actual: dict[tuple[str, int, str], dict[str, float]]) -> 
     return checks
 
 
-def write_outputs(rows: list[dict[str, str]], qualitative: list[tuple[str, str, str]], out_dir: Path, label: str) -> None:
-    csv_out = out_dir / f"verification_against_paper{label}.csv"
-    md_out = out_dir / f"verification_against_paper{label}.md"
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def write_outputs(
+    rows: list[dict[str, str]],
+    qualitative: list[tuple[str, str, str]],
+    out_dir: Path,
+    label: str,
+    summary_path: Path,
+) -> None:
+    if not rows:
+        raise ValueError("No quantitative verification rows were produced")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    suffix = "" if not label else (label if label.startswith("_") else f"_{label}")
+    csv_out = out_dir / f"verification_against_paper{suffix}.csv"
+    md_out = out_dir / f"verification_against_paper{suffix}.md"
+    json_out = out_dir / f"verification_against_paper{suffix}.json"
     with csv_out.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
         writer.writeheader()
@@ -165,7 +217,8 @@ def write_outputs(rows: list[dict[str, str]], qualitative: list[tuple[str, str, 
         qual_counts[status] += 1
 
     lines = [
-        f"# AirTalking reproduction verification against paper figures{label}",
+        f"# AirTalking reproduction verification against paper figures"
+        f"{f' ({label})' if label else ''}",
         "",
         "## Conclusion",
         "",
@@ -223,7 +276,32 @@ def write_outputs(rows: list[dict[str, str]], qualitative: list[tuple[str, str, 
         ]
     )
     md_out.write_text("\n".join(lines), encoding="utf-8")
-    print({"csv": str(csv_out), "markdown": str(md_out)})
+    source_path = summary_path.resolve()
+    verifier_source = Path(__file__).resolve()
+    payload = {
+        "schema_version": 2,
+        "status": "completed",
+        "source_summary": {"path": str(source_path), "sha256": sha256_file(source_path)},
+        "row_count": len(rows),
+        "verdict_counts": counts,
+        "qualitative_row_count": len(qualitative),
+        "qualitative_verdict_counts": qual_counts,
+        "thresholds": {"match_max_relative_error": 0.25, "partial_max_relative_error": 0.50},
+        "artifacts": {
+            "verification_csv": {"path": str(csv_out.resolve()), "sha256": sha256_file(csv_out)},
+            "verification_markdown": {"path": str(md_out.resolve()), "sha256": sha256_file(md_out)},
+        },
+        "provenance": {
+            "finished_utc": datetime.now(timezone.utc).isoformat(),
+            "argv": list(sys.argv),
+            "command_windows": subprocess.list2cmdline(sys.argv),
+            "python": platform.python_version(),
+            "verifier_source": str(verifier_source),
+            "verifier_source_sha256": sha256_file(verifier_source),
+        },
+    }
+    json_out.write_text(json.dumps(payload, indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8")
+    print(json.dumps({"csv": str(csv_out), "markdown": str(md_out), "json": str(json_out)}, ensure_ascii=False))
 
 
 def main() -> None:
@@ -237,7 +315,7 @@ def main() -> None:
     actual = load_actual(summary_path)
     rows = compare_rows(actual)
     qualitative = qualitative_checks(actual)
-    write_outputs(rows, qualitative, out_dir, args.label)
+    write_outputs(rows, qualitative, out_dir, args.label, summary_path)
 
 
 if __name__ == "__main__":

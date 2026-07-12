@@ -152,10 +152,12 @@
           0.95
         ],
         [
-          Infinity,
+          null,
           0.965
         ]
-      ]
+      ],
+      "null_means_unbounded": true,
+      "target_thresholds_semantics": "Each pair is [exclusive upper SINR bound in dB, required quality]; a null upper bound means the final interval is unbounded."
     },
     "adaptive_semantic": {
       "name": "adaptive_semantic",
@@ -205,10 +207,12 @@
           0.95
         ],
         [
-          Infinity,
+          null,
           0.965
         ]
-      ]
+      ],
+      "null_means_unbounded": true,
+      "target_thresholds_semantics": "Each pair is [exclusive upper SINR bound in dB, required quality]; a null upper bound means the final interval is unbounded."
     }
   },
   "areas": [

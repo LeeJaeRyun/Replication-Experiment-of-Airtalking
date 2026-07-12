@@ -6,6 +6,10 @@ studies/**/reference/*.pdf
 # Local/agent metadata and Python caches
 .agents/
 .codex/
+.cache/
+.venv/
+*.out.log
+*.err.log
 __pycache__/
 **/__pycache__/
 *.py[cod]
@@ -13,12 +17,14 @@ __pycache__/
 # Large or local-only generated artifacts
 studies/**/results/**/timeseries_and_sinr_samples.npz
 studies/**/results/**/*semantic_encoder_decoder.pt
+studies/**/results/**/*checkpoint.pt
 studies/**/results/**/samples/
 studies/**/results/**/cityscapes_semantic_measurements.csv
 studies/**/results/**/report_*.json
 studies/**/results/**/report_render*/
 studies/**/results/**/rendered*/
 studies/**/results/**/_smoke*/
+studies/**/results/**/*smoke*/
 studies/**/results/**/smoke/
 studies/**/results/**/calibration/
 

@@ -60,6 +60,8 @@ def set_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def collect_pairs(image_root: Path, label_root: Path, split: str) -> list[SamplePair]:
@@ -321,16 +323,28 @@ def measure_timing(model: SemanticEncoderDecoder, sample: torch.Tensor, device: 
     decode_times: list[float] = []
     full_times: list[float] = []
     for _ in range(runs):
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
         start = time.perf_counter()
         latent = model.encode(sample)
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
         encode_times.append(time.perf_counter() - start)
 
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
         start = time.perf_counter()
         _ = model.decode(latent, sample.shape[-2:])
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
         decode_times.append(time.perf_counter() - start)
 
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
         start = time.perf_counter()
         _ = model(sample)
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
         full_times.append(time.perf_counter() - start)
 
     return {
@@ -423,6 +437,12 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=260710)
     parser.add_argument("--timing-runs", type=int, default=10)
+    parser.add_argument(
+        "--device",
+        choices=["auto", "cpu", "cuda"],
+        default="auto",
+        help="Execution device. Use cpu to avoid competing with another GPU workload.",
+    )
     parser.add_argument("--class-balanced-loss", action="store_true")
     parser.add_argument("--scheduler", choices=["none", "cosine"], default="cosine")
     parser.add_argument("--eval-checkpoint", default=None, help="Load a saved checkpoint before training/evaluation.")
@@ -433,7 +453,9 @@ def main() -> None:
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if args.device == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("--device cuda was requested, but CUDA is not available")
+    device = torch.device("cuda" if args.device == "cuda" or (args.device == "auto" and torch.cuda.is_available()) else "cpu")
     image_size = (args.image_width, args.image_height)
     train_ds = CityscapesSemanticDataset(Path(args.image_root), Path(args.label_root), "train", image_size, args.train_limit)
     val_ds = CityscapesSemanticDataset(Path(args.image_root), Path(args.label_root), "val", image_size, args.val_limit)
