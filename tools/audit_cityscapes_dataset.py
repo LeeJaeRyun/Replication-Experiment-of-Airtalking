@@ -719,155 +719,11 @@ def histogram_rows(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def render_summary(manifest: dict[str, Any]) -> str:
-    status = manifest["status"]
-    lines = [
-        "# Cityscapes 데이터셋 감사 요약",
-        "",
-        f"- 엄격 감사 결과: **{'통과' if status['strict_pass'] else '실패'}**",
-        f"- 데이터 루트: `{manifest['dataset']['dataset_root']}`",
-        f"- 실행 시간: {manifest['run']['elapsed_seconds']:.3f}초 (worker 1개, 순차 I/O)",
-        f"- 오류/경고: {status['error_count']} / {status['warning_count']}",
-        "",
-        "## 표본 수와 1:1 대응",
-        "",
-        "| split | RGB | color GT | instanceIds GT | labelIds GT | polygons GT | 완전 대응 |",
-        "|---|---:|---:|---:|---:|---:|:---:|",
-    ]
-    for split in SPLITS:
-        result = manifest["splits"][split]
-        counts = result["counts"]
-        paired = result["one_to_one"]["all_rgb_have_exactly_one_of_each_gt_type"]
-        lines.append(
-            f"| {split} | {counts['rgb']:,} | {counts['gt_color']:,} | "
-            f"{counts['gt_instanceIds']:,} | {counts['gt_labelIds']:,} | "
-            f"{counts['gt_polygons']:,} | {'예' if paired else '아니오'} |"
-        )
-    lines.extend(["", "## 도시와 split 누수", ""])
-    for split in SPLITS:
-        cities = manifest["splits"][split]["cities"]
-        lines.append(
-            f"- **{split}**: {cities['rgb_city_count']}개 — "
-            + ", ".join(cities["rgb_city_list"])
-        )
-    leakage = manifest["leakage"]
-    lines.extend(
-        [
-            "",
-            f"- stem 누수: **{'있음' if leakage['has_stem_leakage'] else '없음'}**",
-            f"- city 누수: **{'있음' if leakage['has_city_leakage'] else '없음'}**",
-            "",
-            "## PNG 및 polygon JSON 검사",
-            "",
-        ]
-    )
-    for split in SPLITS:
-        result = manifest["splits"][split]
-        png_text = []
-        for kind in PNG_KINDS:
-            check = result["png_checks"][kind]
-            dims = ", ".join(f"{key}: {value:,}" for key, value in check["dimensions"].items())
-            modes = ", ".join(f"{key}: {value:,}" for key, value in check["modes"].items())
-            png_text.append(
-                f"  - {kind}: {check['files_inspected']:,}/{check['files_discovered']:,}, "
-                f"dimensions [{dims}], modes [{modes}]"
-            )
-        lines.append(f"- **{split}**")
-        lines.extend(png_text)
-        polygons = result["polygon_json"]
-        lines.append(
-            f"  - polygons JSON: {polygons['files_parsed']:,}/{polygons['files_discovered']:,} "
-            f"파싱, 객체 {polygons['object_count']:,}개, 파싱 오류 "
-            f"{len(polygons['parse_errors']):,}개, 스키마 오류 {len(polygons['schema_errors']):,}개"
-        )
-    lines.extend(
-        [
-            "",
-            "검사 범위: 인식된 RGB·GT PNG 전부의 크기와 모드를 검사했습니다. "
-            "labelIds는 모든 픽셀을 완전히 디코딩했고, 나머지 PNG는 헤더를 검사했습니다. "
-            "모든 polygons JSON은 파싱 및 기본 스키마 검사를 했습니다.",
-            "",
-            "## train/val 19-class 픽셀 분포",
-            "",
-            "Cityscapes의 원본 `labelId`를 학습용 `trainId` 0~18로 매핑했습니다. "
-            "19개에 속하지 않는 픽셀은 `ignore`로 합쳤습니다.",
-            "",
-            "| trainId | labelId | 클래스 | train 픽셀 | val 픽셀 | train+val 픽셀 |",
-            "|---:|---:|---|---:|---:|---:|",
-        ]
-    )
-    train_hist = manifest["splits"]["train"]["semantic_label_pixels"]["train_id_histogram"]
-    val_hist = manifest["splits"]["val"]["semantic_label_pixels"]["train_id_histogram"]
-    total_hist = manifest["train_val_19_class_histogram"]["train_id_histogram"]
-    for train_id, raw_id, name in CITYSCAPES_CLASSES:
-        lines.append(
-            f"| {train_id} | {raw_id} | {name} | {train_hist[str(train_id)]:,} | "
-            f"{val_hist[str(train_id)]:,} | {total_hist[str(train_id)]:,} |"
-        )
-    for label, summary in (
-        ("train", manifest["splits"]["train"]["semantic_label_pixels"]),
-        ("val", manifest["splits"]["val"]["semantic_label_pixels"]),
-        ("train+val", manifest["train_val_19_class_histogram"]),
-    ):
-        lines.append(
-            f"- {label} ignore 비율: **{summary['ignore_ratio']:.6%}** "
-            f"({summary['ignored_pixels']:,}/{summary['total_pixels']:,} 픽셀)"
-        )
-    test = manifest["test_ground_truth_semantics"]
-    if test["has_19_class_evaluation_pixels"]:
-        korean_test_explanation = (
-            "이 로컬 test labelIds에는 19개 평가 클래스 픽셀이 있습니다. 일반 공개 "
-            "Cityscapes test placeholder 분포와 다르므로, test 정답으로 사용하기 전에 "
-            "출처와 사용 권한을 확인해야 합니다."
-        )
-    else:
-        korean_test_explanation = (
-            "test 픽셀 중 19개 평가 trainId에 매핑되는 픽셀이 하나도 없습니다. 따라서 "
-            "동봉된 test gtFine은 무시 영역/placeholder일 뿐, 로컬 정확도나 mIoU를 계산할 "
-            "수 있는 의미 분할 정답이 아닙니다. test 예측은 Cityscapes 공식 평가 서버로 "
-            "평가해야 합니다."
-        )
-    lines.extend(
-        [
-            "",
-            "## test GT 해석 주의",
-            "",
-            f"**{korean_test_explanation}**",
-            "",
-            f"전수 검사 결과 test의 19-class 유효 픽셀은 "
-            f"{test['valid_19_class_pixels']:,}/{test['total_pixels']:,}개이고, "
-            f"ignore 비율은 {test['ignore_ratio']:.6%}입니다.",
-            "",
-            "## 재현 가능한 데이터셋 지문",
-            "",
-            f"- SHA-256: `{manifest['fingerprint']['digest']}`",
-            f"- inventory: {manifest['fingerprint']['inventory_file_count']:,}개 파일, "
-            f"{manifest['fingerprint']['inventory_total_size_bytes']:,} bytes",
-            f"- content SHA-256: {manifest['fingerprint']['content_hashed_file_count']:,}개 파일, "
-            f"{manifest['fingerprint']['content_hashed_size_bytes']:,} bytes",
-            f"- 정책: {manifest['fingerprint']['content_hash_policy']}",
-            "",
-            "지문은 모든 파일의 상대 경로와 크기를 사용하며, 기본 정책에서는 모든 RGB와 "
-            "labelIds 파일의 실제 바이트 SHA-256도 사용합니다. 정확한 정규화 방법과 전체 "
-            "파일 inventory는 `dataset_manifest.json`에 기록되어 있습니다.",
-            "",
-            "## 용어",
-            "",
-            "- **stem**: 한 장면을 식별하는 공통 파일명 부분입니다. RGB와 네 GT 파일이 같은 stem을 가져야 합니다.",
-            "- **labelId**: Cityscapes 원본 의미 클래스 번호입니다.",
-            "- **trainId**: 학습·평가에 쓰도록 19개 클래스를 0~18로 다시 번호 붙인 값입니다.",
-            "- **ignore 비율**: 19개 평가 클래스에 속하지 않아 손실·mIoU 계산에서 제외해야 하는 픽셀 비율입니다.",
-            "- **fingerprint**: 파일 경로·크기·내용 해시를 하나의 SHA-256으로 합친 데이터셋 식별값입니다.",
-            "",
-        ]
-    )
-    return "\n".join(lines)
 
 
 def write_outputs(manifest: dict[str, Any], output_dir: Path) -> dict[str, Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "dataset_manifest.json"
-    summary_path = output_dir / "dataset_summary.md"
     histogram_path = output_dir / "class_histogram.csv"
     with manifest_path.open("w", encoding="utf-8", newline="\n") as handle:
         json.dump(
@@ -879,13 +735,12 @@ def write_outputs(manifest: dict[str, Any], output_dir: Path) -> dict[str, Path]
             allow_nan=False,
         )
         handle.write("\n")
-    summary_path.write_text(render_summary(manifest), encoding="utf-8", newline="\n")
     rows = histogram_rows(manifest)
     with histogram_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
-    return {"manifest": manifest_path, "summary": summary_path, "histogram": histogram_path}
+    return {"manifest": manifest_path, "histogram": histogram_path}
 
 
 def build_parser() -> argparse.ArgumentParser:

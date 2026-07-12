@@ -202,7 +202,6 @@ def write_outputs(
     out_dir.mkdir(parents=True, exist_ok=True)
     suffix = "" if not label else (label if label.startswith("_") else f"_{label}")
     csv_out = out_dir / f"verification_against_paper{suffix}.csv"
-    md_out = out_dir / f"verification_against_paper{suffix}.md"
     json_out = out_dir / f"verification_against_paper{suffix}.json"
     with csv_out.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
@@ -215,67 +214,6 @@ def write_outputs(
     qual_counts: dict[str, int] = {"match": 0, "partial": 0, "mismatch": 0}
     for _, status, _ in qualitative:
         qual_counts[status] += 1
-
-    lines = [
-        f"# AirTalking reproduction verification against paper figures"
-        f"{f' ({label})' if label else ''}",
-        "",
-        "## Conclusion",
-        "",
-        "The current reproduction does not quantitatively match the paper figures. It preserves a few qualitative directions, especially that semantic processing outperforms the non-semantic baseline at 300 x 300 m2, but several key policy rankings and magnitudes differ.",
-        "",
-        "## Quantitative check summary",
-        "",
-        f"- Match: {counts['match']}",
-        f"- Partial: {counts['partial']}",
-        f"- Mismatch: {counts['mismatch']}",
-        "",
-        "A `match` means the reproduction is within 25% of the paper visual estimate; `partial` is within 50%; `mismatch` is outside 50%. Because the paper provides plots but not raw data, the paper-side numbers are visual estimates from rendered Figure 3, Figure 4, and Figure 6.",
-        "",
-        "## Qualitative checks",
-        "",
-        "| Check | Status | Evidence |",
-        "|---|---|---|",
-    ]
-    for check, status, evidence in qualitative:
-        lines.append(f"| {check} | {status} | {evidence} |")
-    top_mismatches = sorted(rows, key=lambda row: float(row["relative_error"]), reverse=True)[:8]
-    lines.extend(
-        [
-            "",
-            "## Largest numeric deviations",
-            "",
-            "| Check | Area | Policy | Metric | Paper estimate | Reproduction | Relative error |",
-            "|---|---:|---|---|---:|---:|---:|",
-        ]
-    )
-    for row in top_mismatches:
-        lines.append(
-            f"| {row['check']} | {row['area']} | {row['policy']} | {row['metric']} | "
-            f"{row['paper_visual_estimate']} | {row['reproduction']} | {row['relative_error']} |"
-        )
-    lines.extend(
-        [
-            "",
-            "## Main mismatch types",
-            "",
-            "- Magnitude mismatch: several reproduced metrics are outside the 50% tolerance against visually estimated paper values.",
-            "- Hidden-parameter sensitivity: request probability, workload distribution, propulsion/hover power, and detailed interference scheduling are not numerically disclosed in the paper.",
-            "- Dataset/profile sensitivity: substitute semantic payload profiles can improve some metrics but shift completed-request counts and energy/latency trade-offs.",
-            "",
-            "## Likely causes",
-            "",
-            "- The paper does not publish raw source code, request probability, workload distribution, propulsion/hover power, codec power, or full interference scheduling details.",
-            "- The reproduction uses assumed values for those hidden parameters, and those assumptions materially change latency, energy, and policy ranking.",
-            "- The density interference correction added to mimic small-area interference improves one trend but inflates latency and flight energy relative to the paper.",
-            "",
-            "## Detailed CSV",
-            "",
-            f"See `{csv_out}` for row-level expected vs. reproduced values.",
-            "",
-        ]
-    )
-    md_out.write_text("\n".join(lines), encoding="utf-8")
     source_path = summary_path.resolve()
     verifier_source = Path(__file__).resolve()
     payload = {
@@ -289,7 +227,6 @@ def write_outputs(
         "thresholds": {"match_max_relative_error": 0.25, "partial_max_relative_error": 0.50},
         "artifacts": {
             "verification_csv": {"path": str(csv_out.resolve()), "sha256": sha256_file(csv_out)},
-            "verification_markdown": {"path": str(md_out.resolve()), "sha256": sha256_file(md_out)},
         },
         "provenance": {
             "finished_utc": datetime.now(timezone.utc).isoformat(),
@@ -301,7 +238,7 @@ def write_outputs(
         },
     }
     json_out.write_text(json.dumps(payload, indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8")
-    print(json.dumps({"csv": str(csv_out), "markdown": str(md_out), "json": str(json_out)}, ensure_ascii=False))
+    print(json.dumps({"csv": str(csv_out), "json": str(json_out)}, ensure_ascii=False))
 
 
 def main() -> None:

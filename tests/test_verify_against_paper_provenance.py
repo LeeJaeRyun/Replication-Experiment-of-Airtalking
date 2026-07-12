@@ -47,6 +47,9 @@ class VerificationProvenanceTests(unittest.TestCase):
             self.assertEqual(companion["row_count"], len(rows))
             self.assertEqual(sum(companion["verdict_counts"].values()), len(rows))
             self.assertTrue(Path(companion["source_summary"]["path"]).is_file())
+            self.assertEqual(set(companion["artifacts"]), {"verification_csv"})
+            self.assertTrue((root / "verification_against_paper_bound.csv").is_file())
+            self.assertFalse((root / "verification_against_paper_bound.md").exists())
 
     def test_duplicate_and_nonfinite_summary_rows_fail(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

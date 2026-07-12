@@ -390,11 +390,6 @@
       "sha256": "61ff3f854e8a8378dc83b5b088da654ce61da8f8b05b958a4aaa81d8f3005064",
       "size_bytes": 2884202
     },
-    "adaptive_followup_research_report_md": {
-      "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\adaptive_followup_research_report.md",
-      "sha256": "68ae057212d4b266310a58e1c6d15762993fcff8e93b46a166a552f2528d9723",
-      "size_bytes": 4512
-    },
     "result_validation_json": {
       "path": "C:\\Users\\firep\\OneDrive\\바탕 화면\\Replication-Experiment-of-Airtalking\\studies\\adaptive_semantic_compression\\results\\adaptive_enhanced_scalable_verified\\result_validation.json",
       "sha256": "b997596a1376062e8074616cc0a690e36d25b03e9fee99e2e3d1b67640a767a9",

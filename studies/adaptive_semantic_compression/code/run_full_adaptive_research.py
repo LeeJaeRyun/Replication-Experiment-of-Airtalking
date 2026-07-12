@@ -1302,175 +1302,6 @@ def save_figures(results: Dict[str, Dict[int, Dict[str, SimulationResult]]], out
     return {path.name: str(path) for path in paths}
 
 
-def pct_change(new: float, old: float) -> float:
-    return (new - old) / old * 100.0 if old else float("nan")
-
-
-def format_row(summary: dict[str, float]) -> str:
-    return (
-        f"{summary['finished']:.1f} | {summary['avg_time']:.2f} | "
-        f"{summary['flight_energy_per_req']:.1f} | {summary['semantic_quality']:.3f} | "
-        f"{summary['semantic_payload_ratio']:.3f}"
-    )
-
-
-def write_analysis(
-    results: Dict[str, Dict[int, Dict[str, SimulationResult]]],
-    quality_rows: Sequence[dict[str, float | str]],
-    neural_anchor: Optional[dict[str, object]],
-    neural_quality_mode: str,
-    out_dir: Path,
-    elapsed: float,
-    repeats: int,
-    t_slots: int,
-    metadata_path: Path,
-    threshold_configuration: Optional[Mapping[str, object]] = None,
-) -> Path:
-    area = select_representative_area(results)
-    has_neural_multi_rate = _has_multi_rate_anchor(neural_anchor)
-    if has_neural_multi_rate and neural_quality_mode == "selection":
-        neural_reflection = (
-            "- Neural encoder/decoder reflection: all five adaptive levels use measured payload and mIoU "
-            "from one trained scalable neural codec for mode selection."
-        )
-    elif has_neural_multi_rate:
-        neural_reflection = (
-            "- Neural encoder/decoder reflection: all five measured neural payloads and mIoUs are recorded, "
-            "while `record_only` deliberately keeps the quality CSV values for selection."
-        )
-    else:
-        neural_reflection = (
-            "- Neural encoder/decoder reflection: only the paper-like payload is anchored to a trained "
-            "codec; the remaining levels retain Cityscapes label-proxy quality."
-        )
-    scope_note = (
-        "- The result is a trade-off study, not a claim that the original AirTalking neural network was "
-        "reproduced. Its weights and training recipe are not public; this run uses the explicitly specified "
-        "paper-inspired scalable codec."
-        if has_neural_multi_rate
-        else "- The result is a trade-off study, not a claim that the original AirTalking paper is fully "
-        "reproduced. The authors' encoder/decoder is not public and some adaptive qualities use a label proxy."
-    )
-    lines: List[str] = [
-        "# Adaptive semantic compression follow-up research",
-        "",
-        "## What changed",
-        "",
-        "This experiment moves beyond the earlier SINR-only probe. The adaptive compression policy is now inside the UAV scheduler, so each candidate UAV relay action is evaluated with the payload ratio selected for that candidate link condition.",
-        "",
-        "## Data and settings",
-        "",
-        "- Public semantic data: Cityscapes gtFine train/val label maps.",
-        f"- Base simulator parameters: `{metadata_path.resolve()}`.",
-        f"- Repeats: {repeats}; simulation slots per repeat: {t_slots}.",
-        "- Compared modes: nonsemantic raw payload, fixed Cityscapes paper-like semantic payload, and channel-aware adaptive semantic payload.",
-        neural_reflection,
-        "",
-        "## Compression table",
-        "",
-        "| mode | payload ratio | mean IoU |",
-        "|---|---:|---:|",
-    ]
-    for row in quality_rows:
-        lines.append(f"| {row['mode']} | {float(row['feature_ratio_mean']):.6f} | {float(row['mean_iou_mean']):.3f} |")
-
-    if neural_anchor is not None:
-        lines.extend(["", "## Neural encoder/decoder anchor", ""])
-        optional_fields = (
-            ("rho_c", ("rho_c_feature_uncompressed_mean", "rho_uint8", "payload_ratio"), 6),
-            ("pixel accuracy", ("pixel_accuracy_best", "pixel_accuracy_final"), 4),
-            ("mIoU", ("semantic_quality_miou_best", "semantic_quality_miou_final", *MIOU_KEYS), 4),
-        )
-        for label, aliases, decimals in optional_fields:
-            value, _ = _numeric_alias(neural_anchor, aliases, label, required=False)
-            if value is not None:
-                lines.append(f"- {label}: {value:.{decimals}f}")
-        timing = neural_anchor.get("timing")
-        if isinstance(timing, Mapping):
-            encode_ms, _ = _numeric_alias(timing, ("encode_ms_median",), "encode time", required=False)
-            decode_ms, _ = _numeric_alias(timing, ("decode_ms_median",), "decode time", required=False)
-            if encode_ms is not None and decode_ms is not None:
-                lines.append(f"- encode/decode median time: {encode_ms:.2f} ms / {decode_ms:.2f} ms")
-        if neural_quality_mode == "record_only":
-            quality_meaning = (
-                "neural payloads and neural mIoU are recorded for every rate, but selection quality "
-                "remains the input quality CSV"
-            )
-        else:
-            quality_meaning = "measured neural mIoU is used both for recording and mode selection"
-        lines.append(f"- adaptive quality mode: {neural_quality_mode}; {quality_meaning}.")
-        if threshold_configuration is not None:
-            lines.append(
-                "- SINR-to-quality threshold rule: "
-                f"{threshold_configuration.get('resolved_rule')} "
-                f"({threshold_configuration.get('quality_source')}); actual thresholds are preserved in run metadata."
-            )
-
-    lines.extend(
-        [
-            "",
-            f"## {area} x {area} m result table",
-            "",
-            "| policy | mode | finished | avg time (s) | flight J/req | semantic quality | payload ratio |",
-            "|---|---|---:|---:|---:|---:|---:|",
-        ]
-    )
-    available_policies = [
-        policy
-        for policy in results.get("adaptive_semantic", {}).get(area, {})
-        if all(mode in results and area in results[mode] and policy in results[mode][area] for mode in ["nonsemantic", "fixed_paper_like", "adaptive_semantic"])
-    ]
-    for policy in available_policies:
-        for mode in ["nonsemantic", "fixed_paper_like", "adaptive_semantic"]:
-            summary = results[mode][area][policy].summary
-            lines.append(f"| {policy} | {mode} | {format_row(summary)} |")
-
-    lines.extend(["", f"## Adaptive vs fixed semantic at {area} x {area} m", ""])
-    lines.append("| policy | finished change | avg time change | quality change | payload-ratio change |")
-    lines.append("|---|---:|---:|---:|---:|")
-    for policy in available_policies:
-        fixed = results["fixed_paper_like"][area][policy].summary
-        adaptive = results["adaptive_semantic"][area][policy].summary
-        lines.append(
-            "| "
-            f"{policy} | {pct_change(adaptive['finished'], fixed['finished']):.1f}% | "
-            f"{pct_change(adaptive['avg_time'], fixed['avg_time']):.1f}% | "
-            f"{adaptive['semantic_quality'] - fixed['semantic_quality']:+.3f} | "
-            f"{pct_change(adaptive['semantic_payload_ratio'], fixed['semantic_payload_ratio']):.1f}% |"
-        )
-
-    anchor_policy = "Greedy" if "Greedy" in available_policies else available_policies[0]
-    second_policy = "MCTS" if "MCTS" in available_policies else available_policies[-1]
-    fixed_greedy = results["fixed_paper_like"][area][anchor_policy].summary
-    adaptive_greedy = results["adaptive_semantic"][area][anchor_policy].summary
-    fixed_mcts = results["fixed_paper_like"][area][second_policy].summary
-    adaptive_mcts = results["adaptive_semantic"][area][second_policy].summary
-    lines.extend(
-        [
-            "",
-            "## Main interpretation",
-            "",
-            f"- {anchor_policy} at {area} m: adaptive finished {adaptive_greedy['finished']:.1f} requests vs fixed {fixed_greedy['finished']:.1f}; average time changed from {fixed_greedy['avg_time']:.2f}s to {adaptive_greedy['avg_time']:.2f}s.",
-            f"- {second_policy} at {area} m: adaptive finished {adaptive_mcts['finished']:.1f} requests vs fixed {fixed_mcts['finished']:.1f}; average time changed from {fixed_mcts['avg_time']:.2f}s to {adaptive_mcts['avg_time']:.2f}s.",
-            scope_note,
-            "- Adaptive compression improves scheduling latency by changing the payload-quality choice per candidate link. In weak links it can choose a smaller payload than the fixed paper-like mode; in stronger links it may spend more payload to preserve semantic quality.",
-            "- Therefore the key claim is not that adaptive always lowers the average payload ratio. The measured gain is a latency/completion improvement with a controlled semantic-quality drop.",
-            "",
-            "## Generated artifacts",
-            "",
-            "- `summary_metrics.csv`: final numeric comparison for all modes, areas, and policies.",
-            "- `compression_mode_usage.csv`: selected adaptive mode counts.",
-            "- `timeseries_and_sinr_samples.npz`: time series and SINR samples for later plotting.",
-            "- `figures/`: result figures for area scaling, latency-quality trade-off, and adaptive mode usage.",
-            "",
-            f"Elapsed wall time: {elapsed:.1f} seconds.",
-        ]
-    )
-    path = out_dir / "adaptive_followup_research_report.md"
-    path.write_text("\n".join(lines), encoding="utf-8")
-    return path
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run full adaptive semantic compression follow-up experiments.")
     parser.add_argument("--metadata", default=str(DEFAULT_METADATA))
@@ -1641,18 +1472,6 @@ def main() -> None:
         npz_path = write_timeseries_npz(results, out_dir)
         figure_paths = save_figures(results, out_dir)
         elapsed = time.perf_counter() - started
-        report_path = write_analysis(
-            results,
-            quality_rows,
-            neural_anchor,
-            args.neural_quality_mode,
-            out_dir,
-            elapsed,
-            repeats,
-            t_slots,
-            metadata_path,
-            threshold_configuration,
-        )
         validation_path = out_dir / "result_validation.json"
         validation_rows, validation_columns, validation_load_errors = result_validator.load_rows_with_schema(summary_csv)
         validation_result = result_validator.validate(
@@ -1677,7 +1496,6 @@ def main() -> None:
             "statistical_summary_csv": statistical_summary_csv,
             "compression_mode_usage_csv": usage_csv,
             "timeseries_and_sinr_samples_npz": npz_path,
-            "adaptive_followup_research_report_md": report_path,
             "result_validation_json": validation_path,
             "runner_source_snapshot": runner_snapshot,
             "validator_source_snapshot": validator_snapshot,

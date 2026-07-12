@@ -343,7 +343,7 @@ class AdaptiveCliSmokeTests(unittest.TestCase):
                 stats_rows = list(csv.DictReader(fh))
             run_metadata = json.loads((out_dir / "run_metadata.json").read_text(encoding="utf-8"))
             result_validation = json.loads((out_dir / "result_validation.json").read_text(encoding="utf-8"))
-            generated_report = (out_dir / "adaptive_followup_research_report.md").read_text(encoding="utf-8")
+            generated_markdown = list(out_dir.rglob("*.md"))
             figure_names = {path.name for path in (out_dir / "figures").iterdir()}
 
         self.assertEqual(len(repeat_rows), 3)
@@ -373,7 +373,8 @@ class AdaptiveCliSmokeTests(unittest.TestCase):
         self.assertEqual(result_validation["schema_version"], 2)
         self.assertEqual(result_validation["expected_combinations"]["areas"], [275])
         self.assertEqual(result_validation["expected_combinations"]["policies"], ["SA"])
-        self.assertIn(str(metadata_path.resolve()), generated_report)
+        self.assertEqual(generated_markdown, [])
+        self.assertNotIn("adaptive_followup_research_report_md", run_metadata["artifacts"])
         self.assertIn("latency_quality_tradeoff_275m.png", figure_names)
         self.assertIn("adaptive_mode_usage_275m.png", figure_names)
         self.assertIn("validator_source_snapshot", run_metadata["artifacts"])

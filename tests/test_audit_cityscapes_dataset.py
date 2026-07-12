@@ -89,6 +89,8 @@ class CityscapesDatasetAuditTests(unittest.TestCase):
             self.assertEqual(parsed["fingerprint"]["digest"], first["fingerprint"]["digest"])
             csv_lines = paths["histogram"].read_text(encoding="utf-8").splitlines()
             self.assertEqual(len(csv_lines), 1 + 3 * 20)
+            self.assertEqual(set(paths), {"manifest", "histogram"})
+            self.assertFalse((parent / "out" / "dataset_summary.md").exists())
 
     def test_missing_gt_is_a_strict_failure(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
